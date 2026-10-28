@@ -1,0 +1,72 @@
+<h1>Dashboard</h1>
+<p class="lede muted">Nivel 0 del canal MBBK: encontrar iniciativas y microservicios, y ver su estado. Esta pantalla no explica ninguna iniciativa.</p>
+<div class="grid-4">
+  <div class="card stat"><strong>3</strong><span>Iniciativas en el hub</span></div>
+  <div class="card stat"><strong>1</strong><span>Ficha MS sembrada</span></div>
+  <div class="card stat"><strong>2</strong><span>Publicadas</span></div>
+  <div class="card stat"><strong>1</strong><span>Pruebas pendientes</span></div>
+</div>
+
+<h2>Filtros</h2>
+<div class="filters" role="group" aria-label="Estado de documentación">
+  @for (pill of [
+    { id: 'all', label: 'Todos' },
+    { id: 'publicada', label: 'Publicada' },
+    { id: 'revision', label: 'En revisión' },
+    { id: 'borrador', label: 'Borrador' },
+    { id: 'desactualizada', label: 'Desactualizada' }
+  ]; track pill.id) {
+    <button type="button" class="pill" [class.active]="status() === pill.id" (click)="setStatus(pill.id)">{{ pill.label }}</button>
+  }
+</div>
+
+<h2>Iniciativas</h2>
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Nombre</th>
+        <th>MS impactados</th>
+        <th>Estado</th>
+        <th>Versión</th>
+        <th>Fecha</th>
+        <th>Owner</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of filteredInitiatives(); track row.code) {
+        <tr>
+          <td><a [routerLink]="row.route">{{ row.code }}</a></td>
+          <td>{{ row.name }}</td>
+          <td>{{ row.ms }}</td>
+          <td><span class="badge" [class.success]="row.status === 'publicada'" [class.warn]="row.status !== 'publicada'">{{ row.statusLabel }}</span></td>
+          <td>{{ row.version }}</td>
+          <td>{{ row.date }}</td>
+          <td>{{ row.owner }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<h2>Catálogo de microservicios</h2>
+<div class="grid-3">
+  @for (card of filteredCards(); track card.name) {
+    @if (card.route) {
+      <a class="card clickable" [routerLink]="card.route">
+        <span class="tag" [class.published]="card.tagClass === 'published'" [class.reuse]="card.tagClass === 'reuse'">{{ card.tag }}</span>
+        <h3>{{ card.name }}</h3>
+        <p>{{ card.blurb }}</p>
+        <p class="tertiary">{{ card.meta }}</p>
+      </a>
+    } @else {
+      <div class="card">
+        <span class="tag" [class.published]="card.tagClass === 'published'" [class.reuse]="card.tagClass === 'reuse'">{{ card.tag }}</span>
+        <h3>{{ card.name }}</h3>
+        <p>{{ card.blurb }}</p>
+        <p class="tertiary">{{ card.meta }}</p>
+      </div>
+    }
+  }
+</div>

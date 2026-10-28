@@ -1,0 +1,24 @@
+<div class="toolbar">
+  <div>
+    <h1>Documentación generada</h1>
+    <p class="lede muted">Elige un código para abrir su documentación en el menú Iniciativas.</p>
+  </div>
+</div>
+<label class="docs-search">
+  <span class="docs-search-ico" aria-hidden="true"></span>
+  <input type="search" placeholder="Buscar por clave o título" [ngModel]="query()" (ngModelChange)="query.set($event)" />
+</label>
+@if (error()) {
+  <div class="callout warn"><strong>Error:</strong> {{ error() }}</div>
+}
+<div class="docs-list docs-list-only">
+  @for (doc of filtered(); track doc.key) {
+    <a class="doc-item" [routerLink]="['/portal/informe', doc.key]">
+      <strong class="key">{{ doc.key }}</strong>
+      <span class="title">{{ doc.title }}</span>
+      <span class="meta"><span>{{ fmt(doc.updated) }}</span></span>
+    </a>
+  } @empty {
+    <div class="empty">{{ items().length ? 'Sin coincidencias.' : 'Aún no hay documentación generada.' }}</div>
+  }
+</div>

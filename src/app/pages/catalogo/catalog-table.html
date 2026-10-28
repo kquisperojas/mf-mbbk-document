@@ -1,0 +1,57 @@
+<h1>{{ title }}</h1>
+<p class="lede muted">{{ lede }}</p>
+@if (status()) {
+  <div class="callout" [class.warn]="warn()">{{ status() }}</div>
+}
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Nombre MS</th>
+        <th>Descripcion</th>
+        <th>Canal</th>
+        <th>Owner</th>
+        <th>Última Modificación</th>
+        <th>Correo</th>
+        <th>Versión</th>
+        <th>Contrato Swagger</th>
+        <th>Repositorio</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.item) {
+        <tr>
+          <td>{{ row.item }}</td>
+          <td>{{ row.displayName }}</td>
+          <td>{{ row.description }}</td>
+          <td>{{ row.canal || 'MBBK' }}</td>
+          <td>{{ row.ownerLabel }}</td>
+          <td>{{ row.lastMod || 'Pendiente' }}</td>
+          <td>
+            @if (row.mail) {
+              <a [href]="'mailto:' + row.mail">{{ row.mail }}</a>
+            } @else {
+              Pendiente
+            }
+          </td>
+          <td>{{ row.version || 'Pendiente' }}</td>
+          <td>
+            @if (row.swagger) {
+              <a [href]="row.swagger" target="_blank" rel="noopener">OpenAPI</a>
+            } @else {
+              Pendiente
+            }
+          </td>
+          <td>
+            @if (row.repoUrl) {
+              <a [href]="row.repoUrl" target="_blank" rel="noopener">{{ row.repo || 'repo' }}</a>
+            } @else {
+              {{ row.repo || 'Pendiente' }}
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

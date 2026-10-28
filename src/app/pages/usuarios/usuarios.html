@@ -1,0 +1,146 @@
+<div class="usuarios-toolbar">
+  <div>
+    <h1>Usuarios</h1>
+    <p class="lede muted">Solo el administrador puede crear, modificar o eliminar usuarios del portal.</p>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="login-error show" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="callout success">{{ success() }}</div>
+}
+
+<div class="usuarios-table-head">
+  <h2>Registrados</h2>
+  <button type="button" class="btn-primary usuarios-create-btn" (click)="startCreate()">Crear usuario</button>
+</div>
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>Usuario GitHub</th>
+        <th>Nombre</th>
+        <th>Correo</th>
+        <th>Rol</th>
+        <th>Squad</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users(); track user.id) {
+        <tr>
+          <td>{{ user.githubUsername }}</td>
+          <td>{{ user.nombre }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.rol }}</td>
+          <td>{{ user.squad }}</td>
+          <td class="row-actions">
+            <button type="button" class="link-btn" (click)="startCreate()">Crear</button>
+            <button type="button" class="link-btn" (click)="startEdit(user)">Modificar</button>
+            <button type="button" class="link-btn danger" (click)="askDelete(user)">Eliminar</button>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5">Aún no hay usuarios.</td>
+          <td class="row-actions">
+            <button type="button" class="link-btn" (click)="startCreate()">Crear</button>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (formOpen()) {
+  <div class="register-overlay" (click)="onOverlayClick($event, 'form')">
+    <div class="register-card" role="dialog" aria-modal="true" aria-labelledby="user-form-title" (click)="$event.stopPropagation()">
+      <form class="register-form" (ngSubmit)="saveForm()" novalidate>
+        <h2 id="user-form-title">{{ formMode() === 'create' ? 'Crear usuario' : 'Modificar usuario' }}</h2>
+        <p class="muted">
+          @if (formMode() === 'create') {
+            Completa los datos y guarda. El usuario queda en PostgreSQL.
+          } @else {
+            Actualiza los datos y guarda. La contraseña vacía se conserva.
+          }
+        </p>
+        @if (formError()) {
+          <div class="login-error show" role="alert">{{ formError() }}</div>
+        }
+        <div class="register-scroll">
+          <div class="field">
+            <label for="form-username">Usuario GitHub</label>
+            <input id="form-username" name="githubUsername" type="text" required minlength="2" maxlength="39"
+              spellcheck="false" placeholder="kquispe" [(ngModel)]="githubUsername" />
+          </div>
+          <div class="field">
+            <label for="form-email">Correo</label>
+            <input id="form-email" name="email" type="email" required [(ngModel)]="email" />
+          </div>
+          <div class="field">
+            <label for="form-password">Contraseña</label>
+            <div class="pwd-wrap">
+              <input id="form-password" name="password" [type]="showPassword ? 'text' : 'password'"
+                [required]="formMode() === 'create'" minlength="8"
+                [placeholder]="formMode() === 'edit' ? 'Dejar vacío para no cambiar' : ''"
+                [(ngModel)]="password" />
+              <button type="button" class="pwd-toggle" (click)="showPassword = !showPassword">
+                {{ showPassword ? 'Ocultar' : 'Mostrar' }}
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="form-nombre">Nombre</label>
+            <input id="form-nombre" name="nombre" type="text" required [(ngModel)]="nombre" />
+          </div>
+          <div class="field">
+            <label for="form-public">Perfil público</label>
+            <input id="form-public" name="perfilPublico" type="text" maxlength="39" spellcheck="false"
+              placeholder="handle de GitHub" [(ngModel)]="perfilPublico" />
+          </div>
+          <div class="field">
+            <label for="form-rol">Rol</label>
+            <select id="form-rol" name="rol" required [(ngModel)]="rol">
+              @for (role of roles(); track role.nombre) {
+                <option [value]="role.nombre">{{ role.nombre }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="form-squad">Squad</label>
+            <select id="form-squad" name="squad" required [(ngModel)]="squad">
+              @for (item of squads(); track item.nombre) {
+                <option [value]="item.nombre">{{ item.nombre }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="register-actions">
+          <button type="button" class="btn-secondary" (click)="closeForm()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="formSubmitting()">
+            {{ formMode() === 'create' ? 'Guardar usuario' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (deleteOpen()) {
+  <div class="register-overlay" (click)="onOverlayClick($event, 'delete')">
+    <div class="register-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="delete-title"
+      (click)="$event.stopPropagation()">
+      <h2 id="delete-title">Eliminar usuario</h2>
+      <p>¿Estás seguro que quieres eliminar a <strong>{{ pendingDelete()?.githubUsername }}</strong>?</p>
+      <p class="muted">Esta acción no se puede deshacer.</p>
+      <div class="register-actions">
+        <button type="button" class="btn-secondary" (click)="closeDelete()">Cancelar</button>
+        <button type="button" class="btn-danger" [disabled]="deleteSubmitting()" (click)="confirmDelete()">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}

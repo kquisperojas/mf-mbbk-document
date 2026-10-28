@@ -1,0 +1,66 @@
+<h1>ch-mbbk-customer-agreement-management-v1</h1>
+<p class="lede muted">Ficha estable del hub. NEG-1678 solo registra el delta de estado de cuenta; no posee este servicio.</p>
+<div class="grid-2">
+  <div class="card">
+    <span class="tag published">Vigente</span>
+    <p><strong>Alias Jarvis:</strong> jarvis-channel-mbbk-customer-agreement-management-v1.0</p>
+    <p><strong>Propósito:</strong> administrar consentimientos, autorizaciones y acuerdos del cliente; también documentos / EECC de canal.</p>
+    <p><strong>Owner / squad:</strong> MBBK · Célula Canales Digitales</p>
+    <p><strong>Repo:</strong> <code>C:\WORKSPACE\BACK\ch-mbbk-customer-agreement-management-v1</code></p>
+    <p><strong>Versión publicada:</strong> 1.0.1 (OpenAPI)</p>
+    <p><strong>Iniciativas:</strong> NEG-1678 (modificado)</p>
+  </div>
+  <div class="card">
+    <h3>Dependencias (evidencia NEG-1678)</h3>
+    <ul class="clean">
+      <li>personal-account-v2 — consultado</li>
+      <li>jsc-mbbk-user-preference — consultado</li>
+      <li>ch-mbbk-correspondence — consultado</li>
+      <li>Hazelcast — sesión</li>
+    </ul>
+  </div>
+</div>
+<h2>Endpoints vigentes (OpenAPI + informe)</h2>
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr><th>Método</th><th>Path</th><th>Origen</th><th>Resumen</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>GET</td>
+        <td><code>/channel/mbbk/v1.0/customer-agreement/retrieve</code></td>
+        <td>OpenAPI</td>
+        <td>Lista acuerdos del cliente (IBS en sesión / query).</td>
+      </tr>
+      <tr>
+        <td>POST</td>
+        <td><code>/channel/mbbk/v1.0/customer-agreement/record</code></td>
+        <td>OpenAPI</td>
+        <td>Registra o actualiza acuerdos.</td>
+      </tr>
+      <tr>
+        <td>GET</td>
+        <td><code>/channel/mbbk/v1.0/customer-agreement/accounts/statement-available/retrieve</code></td>
+        <td>Informe NEG-1678</td>
+        <td>Lista EECC disponibles.</td>
+      </tr>
+      <tr>
+        <td>GET</td>
+        <td><code>/channel/mbbk/v1.0/customer-agreement/accounts/statement/retrieve</code></td>
+        <td>Informe NEG-1678</td>
+        <td>Descarga EECC del período. Query: productCode, month, year.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<h2>Curl DES (sin secretos)</h2>
+<p class="tertiary">Host de ejemplo tomado del OpenAPI de DES. Sustituye cookies/tokens en tu cliente; no se publican.</p>
+<pre class="curl">curl -X GET "https://jch-mbbk-customer-agreement-management-v1-cal.apps.ocpdescal.financiero.bco/channel/mbbk/v1.0/customer-agreement/retrieve" \
+  -H "request-ID: &lt;uuid&gt;" \
+  -H "request-date: 2019-07-11T01:30:00.000-05:00" \
+  -H "app-code: MBBK" \
+  -H "caller-name: customer-agreement-management" \
+  -H "authorization: &lt;no-publicar&gt;"</pre>
+<p>Headers obligatorios según OpenAPI: <code>request-ID</code>, <code>request-date</code>, <code>app-code</code>, <code>caller-name</code>.</p>
+<div class="callout warn">Códigos de error de canal MBBKxxxx: pendientes de consolidar en esta ficha.</div>

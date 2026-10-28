@@ -1,0 +1,77 @@
+<h1>3. Ficha de iniciativa</h1>
+<p class="lede muted">El menú de 4 secciones se queda corto. Para el MVP del canal se usan 7 secciones.</p>
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr><th>#</th><th>Sección</th><th>Para quién</th><th>Fuente principal</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>Iniciativa</td><td>Negocio, PO, QA, nuevos en el squad</td><td>Jira, DET, Figma, nota de alcance</td></tr>
+      <tr><td>2</td><td>Solución</td><td>Desarrollo y arquitectura</td><td>DET + código + análisis</td></tr>
+      <tr><td>3</td><td>Microservicios y contratos</td><td>Desarrollo, QA</td><td>OpenAPI / controller</td></tr>
+      <tr><td>4</td><td>Diagramas</td><td>Desarrollo y arquitectura</td><td>Archify + To-Be + PR</td></tr>
+      <tr><td>5</td><td>Pruebas</td><td>QA</td><td>Catálogo CP del usuario</td></tr>
+      <tr><td>6</td><td>Cambios y versionado</td><td>Todos</td><td>PRs, commits, changelog</td></tr>
+      <tr><td>7</td><td>Artefactos</td><td>Todos</td><td>Archivos en artefactos/</td></tr>
+    </tbody>
+  </table>
+</div>
+<h2>1. Iniciativa</h2>
+<p>Para negocio, PO, QA y onboarding. Fuente: épica Jira, DET, Figma, nota de alcance.</p>
+<ul class="clean">
+  <li>Objetivo en 2–3 líneas</li>
+  <li>En alcance / Fuera de alcance</li>
+  <li>Historias o capacidades pedidas (no la implementación)</li>
+  <li>Criterios de aceptación</li>
+  <li>MS previstos (Nuevo / Modificado / Reutilizado)</li>
+  <li>Enlaces: Jira, Figma, DET, arquitectura</li>
+  <li>Estado de la documentación y owner</li>
+</ul>
+<p class="tertiary">No va aquí: endpoints reales, clases, curls, contraste DET vs código.</p>
+<h2>2. Solución</h2>
+<p>Para desarrollo y arquitectura. Fuente: DET + código + análisis.</p>
+<ul class="clean">
+  <li>Propuesta o “lo implementado”</li>
+  <li>Cadenas de llamada por flujo</li>
+  <li>Reglas de negocio clave</li>
+  <li>Contraste DET vs propuesta/código</li>
+  <li>Componentes (controller, service, connector)</li>
+  <li>Gaps y riesgos</li>
+</ul>
+<p class="tertiary">No va aquí: catálogo masivo de curls ni viewers Archify.</p>
+<h2>3. Microservicios y contratos</h2>
+<p>Sección que hoy no existía como menú. Por cada MS impactado:</p>
+<ul class="clean">
+  <li>Definición: para qué existe, no qué hace esta NEG</li>
+  <li>Repo, versión (v1.0 / v2.0), ambiente</li>
+  <li>Rol en esta iniciativa (orquestador, consultado, sin cambio)</li>
+  <li>Dependencias arriba/abajo</li>
+  <li>Tabla de endpoints: método, path, headers, request/response resumido</li>
+  <li>Bloque curl listo para copiar (DES/QA, sin secretos)</li>
+  <li>Códigos de error del canal (MBBKxxxx)</li>
+  <li>Link a OpenAPI si existe</li>
+</ul>
+<div class="callout warn">Regla: el curl se genera desde OpenAPI/controller, no se inventa. Si falta contrato, el bloque queda Pendiente.</div>
+<h2>4. Diagramas</h2>
+<ul class="clean">
+  <li>Cards MS (qué hace / para qué se usa)</li>
+  <li>Tabs: secuencia, flujo, logical, physical</li>
+  <li>Cada viewer declara origen (DET, código, PR) y commit</li>
+  <li>Placeholder “Pendiente de diagrama” si no hay HTML</li>
+</ul>
+<p>Generación desde PR: extraer controllers, services, connectors y OpenAPI; armar cadena verificable; publicar en <code>diagrams/</code>.</p>
+<h2>5. Pruebas</h2>
+<p>Fuente: catálogo CP del usuario. No inventar CP. Sin escenarios: callout Pendientes y stats en 0.</p>
+<h2>6. Cambios y versionado</h2>
+<div class="table-wrap">
+  <table class="data">
+    <thead><tr><th>Versión</th><th>Qué incrementa</th></tr></thead>
+    <tbody>
+      <tr><td>portal x.y</td><td>Cambio de contenido del informe</td></tr>
+      <tr><td>DET n.n</td><td>Documento de definición</td></tr>
+      <tr><td>MS vN.N</td><td>Artefacto Jarvis / release del servicio</td></tr>
+    </tbody>
+  </table>
+</div>
+<h2>7. Artefactos</h2>
+<p>Lista canónica, no narrativa: DET, Figma, Jira, PNG de arquitectura, exports, <code>figma.url.txt</code>.</p>

@@ -1,0 +1,92 @@
+<div class="sidebar-backdrop" [class.show]="sidebarOpen" (click)="sidebarOpen = false"></div>
+<aside class="sidebar" [class.open]="sidebarOpen">
+  <div class="sidebar-brand">
+    <strong>Portal MBBK</strong>
+    <span>Célula Canales Digitales · v1.0</span>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Inicio</div>
+    <a class="nav-link" routerLink="/portal/dashboard" routerLinkActive="active">Dashboard</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Documentación del portal</div>
+    <a class="nav-link" routerLink="/portal/vision" routerLinkActive="active">1. Visión general</a>
+    <a class="nav-link" routerLink="/portal/hub" routerLinkActive="active">2. Hub canal MBBK</a>
+    <a class="nav-link" routerLink="/portal/ficha-iniciativa" routerLinkActive="active">3. Ficha de iniciativa</a>
+    <a class="nav-link" routerLink="/portal/ficha-ms" routerLinkActive="active">4. Ficha de microservicio</a>
+    <a class="nav-link" routerLink="/portal/generar" routerLinkActive="active">5. Generar documentación</a>
+    <a class="nav-link" routerLink="/portal/administrar" routerLinkActive="active">6. Administrar Documentación</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Iniciativas</div>
+    <a class="nav-link" routerLink="/portal/iniciativas" routerLinkActive="active">Todas</a>
+    @for (doc of docs(); track doc.key) {
+      <a class="nav-link" [routerLink]="['/portal/informe', doc.key]" routerLinkActive="active">{{ doc.key }}</a>
+    }
+  </div>
+
+  <div class="nav-group">
+    <button type="button" class="nav-link nav-parent" [class.active]="false"
+      [attr.aria-expanded]="catalogOpen"
+      (click)="catalogOpen = !catalogOpen; $event.stopPropagation()">
+      Catálogo MS <span class="chevron">▾</span>
+    </button>
+    <div class="nav-sub" [class.is-collapsed]="!catalogOpen">
+      <a class="nav-link nav-sublink" routerLink="/portal/catalogo" routerLinkActive="active">Resumen</a>
+      <a class="nav-link nav-sublink" routerLink="/portal/ms-experiencia" routerLinkActive="active">Microservicios De Experiencia</a>
+      <a class="nav-link nav-sublink" routerLink="/portal/ms-soporte" routerLinkActive="active">Microservicios De Soporte Canal</a>
+    </div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-title">Cuenta</div>
+    @if (auth.isAdmin()) {
+      <a class="nav-link" routerLink="/portal/usuarios" routerLinkActive="active">Usuarios</a>
+      <a class="nav-link" routerLink="/portal/credenciales" routerLinkActive="active">Credenciales APIs</a>
+    }
+    <a class="nav-link" routerLink="/portal/perfil" routerLinkActive="active">Perfil</a>
+  </div>
+</aside>
+
+<header class="app-topbar">
+  <button type="button" class="menu-toggle" (click)="sidebarOpen = true">Menú</button>
+  <div class="topbar-brand" aria-label="Banco Pichincha">
+    <span class="bp-mark" aria-hidden="true"></span>
+    <span class="bp-name">BANCO PICHINCHA</span>
+  </div>
+  <div class="user-menu">
+    <button type="button" class="user-btn" [attr.aria-expanded]="userMenuOpen"
+      (click)="userMenuOpen = !userMenuOpen; $event.stopPropagation()">
+      <img [src]="auth.avatarUrl(auth.session()?.publicProfile || auth.session()!.username)" alt="" (error)="hideAvatar($event)" />
+      <span class="who">
+        <strong>{{ auth.session()?.displayName }}</strong>
+        <span>{{ auth.session()?.username }}</span>
+      </span>
+    </button>
+    <div class="user-dropdown" [class.open]="userMenuOpen">
+      @if (auth.isAdmin()) {
+        <button type="button" routerLink="/portal/usuarios">Usuarios</button>
+        <button type="button" routerLink="/portal/credenciales">Credenciales APIs</button>
+      }
+      <button type="button" routerLink="/portal/perfil">Perfil</button>
+      <button type="button" (click)="logout()">Cerrar sesión</button>
+    </div>
+  </div>
+</header>
+
+<main class="app-main" [class.full-bleed]="isInforme()">
+  <router-outlet />
+  @if (!hideFooter()) {
+    <footer class="note">
+      Portal MBBK v1.0 · Fuente: artefactos/Documentacion.docx · Shell visual NEG-1678 ·
+      mf-mbbk-document · API ms-mbbk-document :8080 · docs :8790
+    </footer>
+  }
+</main>
+
+@if (toast) {
+  <div class="toast show" role="status">{{ toast }}</div>
+}

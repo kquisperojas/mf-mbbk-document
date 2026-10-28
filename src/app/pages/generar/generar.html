@@ -1,0 +1,126 @@
+<div class="toolbar">
+  <div>
+    <h1>Iniciativas solucionadas</h1>
+    <p class="lede muted">
+      Épicas del tablero en estado <strong>{{ config()?.status || 'Solucionado' }}</strong> que tienen responsable asignado.
+      @if (config()?.boardUrl) {
+        <a class="link" [href]="config()!.boardUrl" target="_blank" rel="noopener">Abrir tablero en Jira</a>
+      }
+    </p>
+    <div class="conn" [class.ok]="connClass === 'ok'" [class.error]="connClass === 'error'">
+      <span class="dot"></span><span>{{ connText }}</span>
+    </div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn secondary" [disabled]="loading" (click)="loadConfig()">
+      <span class="ico">⟳</span> Actualizar
+    </button>
+  </div>
+</div>
+
+<div class="filter-row">
+  <div class="filters">
+    <button type="button" class="pill" [class.active]="scope === 'assigned'" (click)="setScope('assigned')">Asignados</button>
+    <button type="button" class="pill" [class.active]="scope === 'mine'" (click)="setScope('mine')">Asignados a mí</button>
+  </div>
+  <input type="search" class="search" placeholder="Buscar por clave, título o responsable" [(ngModel)]="query" />
+  <span class="tertiary">{{ fetchedAt }}</span>
+</div>
+
+@if (listError) {
+  <div class="callout warn"><strong>Jira:</strong> {{ listError }}</div>
+}
+
+<div class="stats">
+  <div class="stat"><strong>{{ items().length || '—' }}</strong><span>Iniciativas</span></div>
+  <div class="stat success"><strong>{{ docsCount() || '—' }}</strong><span>Con documentación</span></div>
+  <div class="stat"><strong>{{ peopleCount() || '—' }}</strong><span>Responsables</span></div>
+</div>
+
+<div class="table-wrap">
+  <table class="data" id="initiatives">
+    <thead>
+      <tr>
+        <th class="col-item">Item</th>
+        <th class="col-key">Iniciativa</th>
+        <th>Descripción</th>
+        <th class="col-owner">Responsable</th>
+        <th class="col-status">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @if (!filtered().length) {
+        <tr><td colspan="5" class="no-data">{{ loading ? 'Cargando iniciativas desde Jira…' : 'No hay iniciativas solucionadas con responsable.' }}</td></tr>
+      }
+      @for (item of filtered(); track item.key; let n = $index) {
+        <tr>
+          <td class="item">{{ n + 1 }}</td>
+          <td>
+            <span class="key"><a [href]="item.url" target="_blank" rel="noopener">{{ item.key }}</a></span>
+            <span class="summary">{{ item.summary }}</span>
+            @if (documented().has(item.key)) {
+              <a class="doc-link" [href]="'/docs/' + item.key + '/informe-' + item.key + '.html#iniciativa'" target="_blank" rel="noopener">Ver documentación</a>
+            }
+            <button type="button" class="link-btn gen-row" (click)="fillLink(item.url)">Generar documentación</button>
+          </td>
+          <td>
+            <span class="desc" [class.empty]="!item.description">{{ item.description || 'Sin descripción en Jira' }}</span>
+          </td>
+          <td><span class="owner"><span class="avatar">{{ initials(item.assignee) }}</span>{{ item.assignee }}</span></td>
+          <td><span class="status-badge">{{ item.status }}</span></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<p class="tertiary jql">JQL: <code>{{ jql }}</code></p>
+
+<div id="gen-form" class="gen-block">
+  <h2>Generar documentación</h2>
+  <p class="lede muted">Se crea el portal <code>DOCUMENTACION/&lt;CLAVE&gt;/informe-&lt;CLAVE&gt;.html</code> con el formato de NEG-1678.</p>
+  <div class="card form-card">
+    <label class="field">
+      <span class="label">Link de la iniciativa <em>*</em></span>
+      <input type="url" required placeholder="https://pichinchaperu.atlassian.net/browse/APP-123" [(ngModel)]="link" />
+      <span class="hint" [class.ok]="hint().ok">{{ hint().text }}</span>
+    </label>
+  </div>
+  <div class="drop-grid">
+    @for (box of [
+      { id: 'det', tag: 'Obligatorio', tagClass: 'mod', title: 'Documento técnico (DET)', hint: '.docx o .pdf' },
+      { id: 'sequence', tag: 'Diagramas', tagClass: '', title: 'Diagramas de secuencia', hint: 'PNG/JPG/SVG o candidate.json' },
+      { id: 'architecture', tag: 'Diagramas', tagClass: '', title: 'Arquitectura', hint: 'Logical / Physical To-Be' },
+      { id: 'tests', tag: 'Opcional', tagClass: 'reuse', title: 'Casos de prueba', hint: 'Excel (.xlsx) o CSV. Sin archivo: Pruebas = Pendientes; se pueden adjuntar después' },
+      { id: 'others', tag: 'Opcional', tagClass: 'reuse', title: 'Otros adjuntos', hint: 'Nota de solución, contratos, capturas' }
+    ]; track box.id) {
+      <div class="drop" [class.over]="over[box.id]" [class.has-files]="files[box.id].length"
+        (dragover)="$event.preventDefault(); over[box.id] = true"
+        (dragleave)="over[box.id] = false"
+        (drop)="onDrop(box.id, $event)">
+        <span class="tag" [class.mod]="box.tagClass === 'mod'" [class.reuse]="box.tagClass === 'reuse'">{{ box.tag }}</span>
+        <h3>{{ box.title }}</h3>
+        <p class="tertiary">{{ box.hint }}</p>
+        <input type="file" [multiple]="box.id === 'sequence' || box.id === 'architecture' || box.id === 'others'"
+          (change)="onFiles(box.id, $event)" />
+        <ul class="file-list">
+          @for (file of files[box.id]; track file.name) {
+            <li>{{ file.name }} · {{ (file.size / 1024).toFixed(0) }} KB</li>
+          }
+        </ul>
+      </div>
+    }
+    <div class="drop static">
+      <span class="tag reuse">Opcional</span>
+      <h3>Figma</h3>
+      <p class="tertiary">URL del diseño; se enlaza en Iniciativa.</p>
+      <input type="url" class="text" placeholder="https://www.figma.com/file/…" [(ngModel)]="figma" />
+    </div>
+  </div>
+  @if (genError) {
+    <div class="callout warn"><strong>No se pudo generar:</strong> {{ genError }}</div>
+  }
+  <div class="form-actions">
+    <button type="button" class="btn primary" [disabled]="submitting" (click)="generate()">Generar documentación</button>
+    <span class="tertiary">{{ progress }}</span>
+  </div>
+</div>

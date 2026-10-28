@@ -1,0 +1,64 @@
+<h1>Perfil</h1>
+<p class="lede muted">Tus datos de cuenta.</p>
+
+@if (success()) {
+  <div class="callout success">{{ success() }}</div>
+}
+
+<div class="card profile-head">
+  <img [src]="auth.avatarUrl(publicHandle())" alt="" (error)="hideAvatar($event)" />
+  <div>
+    <h2 class="profile-name">
+      {{ auth.session()?.displayName }}
+      <a href="/portal/perfil" class="link-btn" (click)="openEdit($event)">Editar</a>
+    </h2>
+    <p><strong>Usuario:</strong> {{ auth.session()?.username }}</p>
+    <p><strong>Rol:</strong> {{ auth.session()?.role }}</p>
+    <p><strong>Squad:</strong> {{ auth.session()?.squad }}</p>
+    <p><strong>Correo:</strong> {{ auth.session()?.email }}</p>
+    <p>
+      <strong>Perfil Github:</strong>
+      <a [href]="publicUrl()" target="_blank" rel="noopener">github.com/{{ publicHandle() }}</a>
+    </p>
+    <p class="tertiary">Último acceso en este navegador: {{ loginAt() }}</p>
+  </div>
+</div>
+
+@if (editOpen()) {
+  <div class="register-overlay" (click)="onOverlayClick($event)">
+    <div class="register-card" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title"
+      (click)="$event.stopPropagation()">
+      <form class="register-form" (ngSubmit)="save()" novalidate>
+        <h2 id="edit-profile-title">Editar perfil</h2>
+        <p class="muted">Puedes cambiar usuario, nombre, correo y perfil GitHub.</p>
+        @if (error()) {
+          <div class="login-error show" role="alert">{{ error() }}</div>
+        }
+        <div class="register-scroll">
+          <div class="field">
+            <label for="edit-usuario">Usuario</label>
+            <input id="edit-usuario" name="githubUsername" type="text" required minlength="2" maxlength="39"
+              spellcheck="false" [(ngModel)]="githubUsername" />
+          </div>
+          <div class="field">
+            <label for="edit-nombre">Nombre</label>
+            <input id="edit-nombre" name="nombre" type="text" required maxlength="150" [(ngModel)]="nombre" />
+          </div>
+          <div class="field">
+            <label for="edit-correo">Correo</label>
+            <input id="edit-correo" name="email" type="email" required [(ngModel)]="email" />
+          </div>
+          <div class="field">
+            <label for="edit-github">Perfil Github</label>
+            <input id="edit-github" name="perfilGithub" type="text" required minlength="2" maxlength="39"
+              spellcheck="false" placeholder="handle de GitHub" [(ngModel)]="perfilGithub" />
+          </div>
+        </div>
+        <div class="register-actions">
+          <button type="button" class="btn-secondary" (click)="closeEdit()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="submitting()">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
