@@ -126,7 +126,7 @@ export class UsuariosPage implements OnInit {
         this.success.set(
           isEdit
             ? `Usuario ${user.githubUsername} actualizado.`
-            : `Usuario ${user.githubUsername} guardado en PostgreSQL.`
+            : `Usuario ${user.githubUsername} guardado.`
         );
         this.reload();
       },

@@ -1,8 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { ADMIN_ROLE } from './hub-data';
+import { SQUAD_MANAGER_ROLES } from './hub-data';
 import { HubSession, UserDto } from './models';
 
 const SESSION_KEY = 'mbbkHubSession';
+const JUST_LOGGED_IN_KEY = 'mbbkHubJustLoggedIn';
 const TTL_MS = 8 * 60 * 60 * 1000;
 
 @Injectable({ providedIn: 'root' })
@@ -13,9 +14,33 @@ export class AuthService {
   readonly isAdmin = computed(() => {
     const session = this.sessionSignal();
     if (!session) return false;
-    return session.role === ADMIN_ROLE || session.username.toLowerCase() === 'admin';
+    return this.normalizedRole(session.role) === 'administrador' || session.username.toLowerCase() === 'admin';
+  });
+  readonly canManageSquad = computed(() => {
+    const session = this.sessionSignal();
+    if (!session) return false;
+    if (this.isAdmin()) return true;
+    return SQUAD_MANAGER_ROLES.includes(this.normalizedRole(session.role));
+  });
+  readonly isTechLead = computed(() => {
+    const session = this.sessionSignal();
+    if (!session) return false;
+    const role = this.normalizedRole(session.role);
+    return role === 'tech lead' || role === 'lider tecnico';
   });
   readonly homePath = computed(() => '/portal/dashboard');
+
+  commentKind(): 'lead' | 'owner' {
+    return this.isTechLead() ? 'lead' : 'owner';
+  }
+
+  private normalizedRole(role: string | undefined): string {
+    return (role || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+  }
 
   private readSession(): HubSession | null {
     try {
@@ -50,11 +75,22 @@ export class AuthService {
     };
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
     this.sessionSignal.set(session);
+    if (!keepSessionTimes) {
+      sessionStorage.setItem(JUST_LOGGED_IN_KEY, '1');
+    }
     return session;
+  }
+
+  consumeLoginToast(): string | null {
+    if (!sessionStorage.getItem(JUST_LOGGED_IN_KEY)) return null;
+    sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
+    const session = this.sessionSignal();
+    return session ? `Sesión iniciada como ${session.username}` : null;
   }
 
   logout(): void {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
     this.sessionSignal.set(null);
   }
 

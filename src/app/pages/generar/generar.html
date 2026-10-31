@@ -1,6 +1,6 @@
 <div class="toolbar">
   <div>
-    <h1>Iniciativas solucionadas</h1>
+    <h1>Generar documentación</h1>
     <p class="lede muted">
       Épicas del tablero en estado <strong>{{ config()?.status || 'Solucionado' }}</strong> que tienen responsable asignado.
       @if (config()?.boardUrl) {
@@ -11,10 +11,13 @@
       <span class="dot"></span><span>{{ connText }}</span>
     </div>
   </div>
-  <div class="actions">
+  <div class="actions toolbar-refresh">
     <button type="button" class="btn secondary" [disabled]="loading" (click)="loadConfig()">
       <span class="ico">⟳</span> Actualizar
     </button>
+    @if (fetchedAt) {
+      <span class="tertiary refresh-time">{{ fetchedAt }}</span>
+    }
   </div>
 </div>
 
@@ -24,7 +27,6 @@
     <button type="button" class="pill" [class.active]="scope === 'mine'" (click)="setScope('mine')">Asignados a mí</button>
   </div>
   <input type="search" class="search" placeholder="Buscar por clave, título o responsable" [(ngModel)]="query" />
-  <span class="tertiary">{{ fetchedAt }}</span>
 </div>
 
 @if (listError) {
@@ -58,10 +60,21 @@
           <td>
             <span class="key"><a [href]="item.url" target="_blank" rel="noopener">{{ item.key }}</a></span>
             <span class="summary">{{ item.summary }}</span>
-            @if (documented().has(item.key)) {
-              <a class="doc-link" [href]="'/docs/' + item.key + '/informe-' + item.key + '.html#iniciativa'" target="_blank" rel="noopener">Ver documentación</a>
+            @if (docStatus(item.key); as doc) {
+              <span
+                class="badge"
+                [class.success]="doc.status === 'publicada'"
+                [class.warn]="doc.status === 'desactualizada'"
+                [class.info]="doc.status === 'revision'"
+                [class.draft]="doc.status === 'borrador'"
+              >{{ doc.statusLabel }}</span>
             }
-            <button type="button" class="link-btn gen-row" (click)="fillLink(item.url)">Generar documentación</button>
+            @if (documented().has(item.key)) {
+              <a class="doc-link" [routerLink]="['/portal/informe', item.key]">Ver documentación</a>
+            }
+            <button type="button" class="link-btn gen-row" (click)="fillLink(item.url)">
+              {{ documented().has(item.key) ? 'Regenerar documentación' : 'Generar documentación' }}
+            </button>
           </td>
           <td>
             <span class="desc" [class.empty]="!item.description">{{ item.description || 'Sin descripción en Jira' }}</span>
@@ -78,11 +91,16 @@
 <div id="gen-form" class="gen-block">
   <h2>Generar documentación</h2>
   <p class="lede muted">Se crea el portal <code>DOCUMENTACION/&lt;CLAVE&gt;/informe-&lt;CLAVE&gt;.html</code> con el formato de NEG-1678.</p>
-  <div class="card form-card">
+  <div class="card form-card fields-row">
     <label class="field">
       <span class="label">Link de la iniciativa <em>*</em></span>
-      <input type="url" required placeholder="https://pichinchaperu.atlassian.net/browse/APP-123" [(ngModel)]="link" />
+      <input type="url" required placeholder="https://pichinchaperu.atlassian.net/browse/NEG-123" [(ngModel)]="link" (ngModelChange)="onMetaChange()" />
       <span class="hint" [class.ok]="hint().ok">{{ hint().text }}</span>
+    </label>
+    <label class="field">
+      <span class="label">Rama Feature</span>
+      <input type="url" placeholder="https://github.com/org/repo/tree/feature/..." [(ngModel)]="featureBranch" (ngModelChange)="onMetaChange()" />
+      <span class="hint">Link de GitHub de la rama de la solución. Se usa para contrastar los casos de prueba con el código.</span>
     </label>
   </div>
   <div class="drop-grid">
@@ -90,7 +108,7 @@
       { id: 'det', tag: 'Obligatorio', tagClass: 'mod', title: 'Documento técnico (DET)', hint: '.docx o .pdf' },
       { id: 'sequence', tag: 'Diagramas', tagClass: '', title: 'Diagramas de secuencia', hint: 'PNG/JPG/SVG o candidate.json' },
       { id: 'architecture', tag: 'Diagramas', tagClass: '', title: 'Arquitectura', hint: 'Logical / Physical To-Be' },
-      { id: 'tests', tag: 'Opcional', tagClass: 'reuse', title: 'Casos de prueba', hint: 'Excel (.xlsx) o CSV. Sin archivo: Pruebas = Pendientes; se pueden adjuntar después' },
+      { id: 'tests', tag: 'Opcional', tagClass: 'reuse', title: 'Casos de prueba', hint: 'Excel (.xlsx) o CSV. Con archivo, indica la Rama Feature para contrastarlos con el código. Sin archivo: Pruebas = Pendientes' },
       { id: 'others', tag: 'Opcional', tagClass: 'reuse', title: 'Otros adjuntos', hint: 'Nota de solución, contratos, capturas' }
     ]; track box.id) {
       <div class="drop" [class.over]="over[box.id]" [class.has-files]="files[box.id].length"
@@ -106,6 +124,11 @@
           @for (file of files[box.id]; track file.name) {
             <li>{{ file.name }} · {{ (file.size / 1024).toFixed(0) }} KB</li>
           }
+          @if (!files[box.id].length && draftFiles[box.id]?.length) {
+            @for (file of draftFiles[box.id]; track file.name) {
+              <li class="draft-file">Borrador: {{ file.name }} · {{ (file.size / 1024).toFixed(0) }} KB</li>
+            }
+          }
         </ul>
       </div>
     }
@@ -113,14 +136,30 @@
       <span class="tag reuse">Opcional</span>
       <h3>Figma</h3>
       <p class="tertiary">URL del diseño; se enlaza en Iniciativa.</p>
-      <input type="url" class="text" placeholder="https://www.figma.com/file/…" [(ngModel)]="figma" />
+      <input type="url" class="text" placeholder="https://www.figma.com/file/…" [(ngModel)]="figma" (ngModelChange)="onMetaChange()" />
     </div>
   </div>
   @if (genError) {
     <div class="callout warn"><strong>No se pudo generar:</strong> {{ genError }}</div>
   }
+  @if (draftStatus) {
+    <p class="tertiary">{{ draftStatus }}</p>
+  }
   <div class="form-actions">
+    <button type="button" class="btn secondary" [disabled]="savingDraft || submitting" (click)="saveDraft(true)">
+      Guardar borrador
+    </button>
     <button type="button" class="btn primary" [disabled]="submitting" (click)="generate()">Generar documentación</button>
-    <span class="tertiary">{{ progress }}</span>
   </div>
 </div>
+
+@if (submitting) {
+  <div class="gen-overlay" role="dialog" aria-modal="true" aria-labelledby="gen-modal-title" aria-busy="true">
+    <div class="gen-modal">
+      <div class="gen-spinner" aria-hidden="true"></div>
+      <h2 id="gen-modal-title">Generando documentación</h2>
+      <p>La documentación se está generando y analizando los casos de prueba.</p>
+      <p class="tertiary">Al finalizar podrás verla en la sección de Iniciativas.</p>
+    </div>
+  </div>
+}

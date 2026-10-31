@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HubApiService } from '../../core/hub-api.service';
-import { AdminDoc, DocIndexItem } from '../../core/models';
+import { AdminDoc, DocIndexItem, DocLifecycleStatus } from '../../core/models';
 
 interface AdminRow {
   method?: string;
@@ -52,7 +52,26 @@ export class AdministrarPage implements OnInit {
 
   items = signal<DocIndexItem[]>([]);
   key = '';
+  statusFilter = '';
+  query = '';
+  readonly statusOptions = [
+    { id: '', label: 'Todas' },
+    { id: 'borrador', label: 'Borrador' },
+    { id: 'revision', label: 'En revisión' },
+    { id: 'publicada', label: 'Publicada' },
+    { id: 'desactualizada', label: 'Desactualizada' }
+  ];
+  editorOpen = signal(false);
+  deleteOpen = signal(false);
+  deleteSubmitting = signal(false);
+  pendingDelete = signal<DocIndexItem | null>(null);
   tab = 'iniciativa';
+  readonly tabs = [
+    { id: 'iniciativa', label: 'Iniciativa' },
+    { id: 'solucion', label: 'Solución' },
+    { id: 'diagramas', label: 'Diagramas' },
+    { id: 'pruebas', label: 'Pruebas' }
+  ];
   error = '';
   status = '';
   saving = false;
@@ -88,10 +107,95 @@ export class AdministrarPage implements OnInit {
   private pendingTab = '';
 
   ngOnInit(): void {
+    this.refreshIndex();
+  }
+
+  refreshIndex(): void {
     this.hub.docsIndex().subscribe({
       next: (data) => this.items.set(data.items || []),
       error: (err: Error) => (this.error = err.message)
     });
+  }
+
+  filteredRows(): DocIndexItem[] {
+    const status = this.statusFilter;
+    const q = this.query.trim().toLowerCase();
+    return this.items().filter((row) => {
+      if (status && this.statusOf(row) !== status) return false;
+      if (!q) return true;
+      const haystack = `${row.key} ${row.title || ''} ${row.subtitle || ''} ${this.statusLabel(row)}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }
+
+  emptyMessage(): string {
+    if (this.query.trim()) return 'No hay coincidencias para esa búsqueda.';
+    if (this.statusFilter) return 'No hay iniciativas en este estado.';
+    return 'No hay documentación para mostrar.';
+  }
+
+  statusOf(row: DocIndexItem): DocLifecycleStatus {
+    if (row.status === 'borrador' || row.hasReport === false || row.isDraft) return 'borrador';
+    if (row.status === 'publicada' || row.status === 'desactualizada' || row.status === 'revision') {
+      return row.status;
+    }
+    return 'revision';
+  }
+
+  statusLabel(row: DocIndexItem): string {
+    if (row.statusLabel) return row.statusLabel;
+    const status = this.statusOf(row);
+    if (status === 'publicada') return 'Publicada';
+    if (status === 'desactualizada') return 'Desactualizada';
+    if (status === 'borrador') return 'Borrador';
+    return 'En revisión';
+  }
+
+  fmt(iso?: string): string {
+    if (!iso) return '—';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleString('es-PE');
+  }
+
+  edit(row: DocIndexItem): void {
+    this.error = '';
+    if (this.statusOf(row) === 'borrador') {
+      void this.router.navigate(['/portal/generar'], { queryParams: { draft: row.key } });
+      return;
+    }
+    this.key = row.key;
+    this.tab = 'iniciativa';
+    this.editorOpen.set(true);
+    this.load();
+  }
+
+  closeEditor(): void {
+    this.editorOpen.set(false);
+    this.doc.set(null);
+    this.key = '';
+    this.error = '';
+  }
+
+  onOverlayClick(event: Event, kind: 'edit' | 'delete'): void {
+    if (event.target !== event.currentTarget) return;
+    if (kind === 'edit') this.closeEditor();
+    else this.closeDelete();
+  }
+
+  askDelete(row?: DocIndexItem): void {
+    const target = row || this.items().find((item) => item.key === this.key) || null;
+    if (!target && !this.key) return;
+    this.pendingDelete.set(
+      target || ({ key: this.key, title: this.key, status: this.statusFilter } as DocIndexItem)
+    );
+    this.deleteOpen.set(true);
+  }
+
+  closeDelete(): void {
+    if (this.deleteSubmitting()) return;
+    this.deleteOpen.set(false);
+    this.pendingDelete.set(null);
   }
 
   load(): void {
@@ -108,10 +212,13 @@ export class AdministrarPage implements OnInit {
           : 'Informe HTML (sin modelo). Edición por sección.';
         if (doc.structured) this.fillModel(doc.model || {});
         else this.html = { iniciativa: '', solucion: '', diagramas: '', pruebas: '', ...(doc.sectionsHtml || {}) };
-        this.tab = this.pendingTab || 'iniciativa';
+        this.tab = this.pendingTab || this.tab || 'iniciativa';
         this.pendingTab = '';
       },
-      error: (err: Error) => (this.error = err.message)
+      error: (err: Error) => {
+        this.error = err.message;
+        this.editorOpen.set(false);
+      }
     });
   }
 
@@ -226,19 +333,27 @@ export class AdministrarPage implements OnInit {
     });
   }
 
-  deleteDoc(): void {
-    if (!this.key) return;
-    if (!confirm(`¿Eliminar la documentación de ${this.key}? Se mueve a _papelera.`)) return;
-    const deleted = this.key;
-    this.hub.deleteDoc(deleted).subscribe({
+  confirmDelete(): void {
+    const target = this.pendingDelete();
+    const deleted = target?.key;
+    if (!deleted || this.deleteSubmitting()) return;
+    const draft = target ? this.statusOf(target) === 'borrador' : false;
+    this.deleteSubmitting.set(true);
+    this.error = '';
+    const request = draft ? this.hub.deleteDraft(deleted) : this.hub.deleteDoc(deleted);
+    request.subscribe({
       next: () => {
+        this.deleteSubmitting.set(false);
+        this.deleteOpen.set(false);
+        this.pendingDelete.set(null);
         this.showToast(`${deleted} eliminada de la lista.`);
-        this.key = '';
-        this.doc.set(null);
+        if (this.key === deleted) this.closeEditor();
         this.items.update((list) => list.filter((i) => i.key !== deleted));
-        void this.router.navigateByUrl('/portal/iniciativas');
       },
-      error: (err: Error) => (this.error = err.message)
+      error: (err: Error) => {
+        this.deleteSubmitting.set(false);
+        this.error = err.message;
+      }
     });
   }
 

@@ -27,7 +27,7 @@ export class CatalogTablePage implements OnInit {
 
   ngOnInit(): void {
     this.group = this.route.snapshot.data['group'] === 'soporte' ? 'soporte' : 'experiencia';
-    this.title = this.group === 'experiencia' ? 'Microservicios De Experiencia' : 'Microservicios De Soporte Canal';
+    this.title = this.group === 'experiencia' ? 'Microservicios de experiencia' : 'Microservicios de soporte canal';
     this.lede =
       this.group === 'experiencia'
         ? 'Prefijos ch-mbbk-* y jch-mbbk-*.'

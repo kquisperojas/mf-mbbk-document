@@ -27,6 +27,17 @@ export interface CatalogItem {
   nombre: string;
 }
 
+export interface TeamMemberDto {
+  id: string;
+  orden: number;
+  nombre: string;
+  rol: string;
+  correo?: string | null;
+  numero?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface InitiativeRow {
   code: string;
   name: string;
@@ -38,16 +49,6 @@ export interface InitiativeRow {
   owner: string;
   search: string;
   route: string;
-}
-
-export interface MsCard {
-  name: string;
-  blurb: string;
-  meta: string;
-  tag: string;
-  tagClass: string;
-  search: string;
-  route?: string;
 }
 
 export interface CatalogMsRow {
@@ -90,15 +91,31 @@ export interface JiraInitiative {
   summary: string;
   url: string;
   assignee: string;
+  assigneeEmail?: string;
   status: string;
   description: string;
+  issueType?: string;
+  created?: string;
+  resolutionDate?: string;
+  reporter?: string;
+  children?: JiraInitiative[];
 }
+
+export type DocLifecycleStatus = 'borrador' | 'revision' | 'publicada' | 'desactualizada';
 
 export interface DocIndexItem {
   key: string;
   title: string;
+  subtitle?: string;
   url: string;
   updated: string;
+  status?: DocLifecycleStatus;
+  statusLabel?: string;
+  hasReport?: boolean;
+  isDraft?: boolean;
+  missing?: string[];
+  publishedAt?: string | null;
+  publishedBy?: string | null;
 }
 
 export interface GenerateResult {
@@ -109,6 +126,9 @@ export interface GenerateResult {
   reportPath?: string;
   backup?: string;
   warnings?: string[];
+  status?: DocLifecycleStatus;
+  statusLabel?: string;
+  missing?: string[];
   summary?: {
     jira?: boolean;
     endpoints?: number;
@@ -118,13 +138,15 @@ export interface GenerateResult {
   };
 }
 
-export interface ApiCredential {
-  id: string;
-  proveedor: string;
-  clave: string;
-  valor: string;
-  descripcion?: string;
-  configurado: boolean;
+export interface DocDraft {
+  key: string;
+  link?: string;
+  figmaUrl?: string;
+  featureBranch?: string;
+  files?: Record<string, Array<{ name: string; size: number }>>;
+  savedAt?: string;
+  status?: DocLifecycleStatus;
+  statusLabel?: string;
 }
 
 export interface AdminDoc {
@@ -135,4 +157,28 @@ export interface AdminDoc {
   structured: boolean;
   model?: Record<string, unknown>;
   sectionsHtml?: Record<string, string>;
+}
+
+export interface DocReviewComment {
+  id: string;
+  author: string;
+  username: string;
+  role: string;
+  kind?: 'lead' | 'owner';
+  text: string;
+  createdAt: string;
+  updatedAt?: string;
+  usuarioId?: string;
+  rolId?: string;
+}
+
+export interface DocReview {
+  key: string;
+  status: DocLifecycleStatus;
+  statusLabel?: string;
+  publishedAt?: string | null;
+  publishedBy?: string | null;
+  approvedByRole?: string | null;
+  missing?: string[];
+  comments: DocReviewComment[];
 }

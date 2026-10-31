@@ -1,29 +1,112 @@
 <h1>1. Visión general</h1>
-<p class="lede muted">El portal se organiza en tres niveles. Cada nivel responde a una pregunta distinta y evita duplicar información entre iniciativas.</p>
+<p class="lede muted">
+  Guía corta del Portal MBBK: documentación de iniciativas de Canales Digitales en un solo lugar.
+</p>
+
+<h2>Qué es el portal</h2>
+<p>
+  Concentra informes HTML a partir de Jira, DET, diagramas y pruebas. No sustituye Jira ni GitHub:
+  toma datos de ahí, los deja para leer, compartir y descargar en Word.
+</p>
+<ul class="clean">
+  <li>Ciclo: <strong>Borrador</strong> → <strong>En revisión</strong> → <strong>Publicada</strong>. Si faltan diagramas o pruebas queda <strong>Desactualizada</strong>.</li>
+  <li>Todos consultan, generan y comentan. Solo el autor edita o borra su comentario. Solo el <strong>líder técnico</strong> aprueba y publica. Solo el <strong>administrador</strong> gestiona usuarios.</li>
+</ul>
+
+<h2>Estados</h2>
 <div class="table-wrap">
   <table class="data">
     <thead>
-      <tr><th>Nivel</th><th>Nombre</th><th>Propósito</th></tr>
+      <tr><th>Estado</th><th>Significa</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Borrador</td><td>Hay insumos y aún no se generó el informe. Se continúa en Generar.</td></tr>
+      <tr><td>En revisión</td><td>Informe con DET, diagramas y pruebas. El líder técnico comenta o publica.</td></tr>
+      <tr><td>Publicada</td><td>El líder técnico aprobó. Lista para el squad.</td></tr>
+      <tr><td>Desactualizada</td><td>Hay informe, pero faltan diagramas o pruebas. Regenerar con esos adjuntos.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Módulos de Documentación del portal</h2>
+<p>Cinco pantallas del menú izquierdo. La búsqueda admite código (NEG/APP), título o responsable, según la pantalla.</p>
+<ol class="clean">
+  <li>
+    <strong>Visión general.</strong> Esta guía. Para qué está cada módulo y qué pantalla abrir. No genera archivos.
+  </li>
+  <li>
+    <strong>Ficha de iniciativa.</strong> Contrato del informe: Iniciativa (negocio), Solución (implementación),
+    Diagramas y Pruebas. Referencia antes de generar o revisar.
+  </li>
+  <li>
+    <strong>Ficha de microservicio.</strong> MS citados en informes ya generados y los códigos NEG/APP que los usan.
+    El buscador filtra por nombre de microservicio o código; el código abre el informe.
+  </li>
+  <li>
+    <strong>Generar documentación.</strong> Épicas Solucionadas de Jira. DET obligatorio. Guardar borrador o generar el HTML.
+    Con diagramas y pruebas queda En revisión; si faltan, Desactualizada. La lista se busca por clave, título o responsable.
+  </li>
+  <li>
+    <strong>Administrar documentación.</strong> Filtra por estado. Modificar abre el editor de las 4 secciones;
+    Eliminar pide confirmación. Un borrador se retoma en Generar.
+  </li>
+</ol>
+
+<h2>Resto del menú</h2>
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr><th>Módulo</th><th>Para qué</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td>Nivel 0</td>
-        <td>Hub canal MBBK</td>
-        <td>Encontrar iniciativas y microservicios, y ver su estado. No explica ninguna iniciativa.</td>
+        <td><a routerLink="/portal/dashboard">Dashboard</a></td>
+        <td>Cards por estado. Un borrador abre Generar; el resto, el informe.</td>
       </tr>
       <tr>
-        <td>Nivel 1</td>
-        <td>Ficha de iniciativa</td>
-        <td>7 secciones (no 4) con el detalle de cada NEG.</td>
+        <td><a routerLink="/portal/squad">Squad</a></td>
+        <td>Contactos. Admin o líder técnico agregan o editan miembros.</td>
       </tr>
       <tr>
-        <td>Nivel 2</td>
-        <td>Ficha de microservicio</td>
-        <td>Catálogo estable que vive en el hub; las iniciativas lo referencian.</td>
+        <td><a routerLink="/portal/iniciativas">Resumen / informe</a></td>
+        <td>Lista por clave o título. Informe: 4 pestañas, comentarios, compartir, Word. Borrador: Generar.</td>
+      </tr>
+      <tr>
+        <td><a routerLink="/portal/catalogo">Catálogo MS</a></td>
+        <td>Inventario GitHub de experiencia y soporte canal.</td>
+      </tr>
+      <tr>
+        <td><a routerLink="/portal/usuarios">Usuarios</a> / <a routerLink="/portal/perfil">Perfil</a></td>
+        <td>Cuentas (solo admin) y tus datos de sesión.</td>
       </tr>
     </tbody>
   </table>
 </div>
-<div class="callout">
-  <strong>Producto.</strong> Portal HTML de documentación (hub + fichas). Destino: <code>C:\WORKSPACE\DOCUMENTACION\&lt;CODIGO&gt;</code>. Versión del portal: v1.0 (hub). Referencia visual: shell de NEG-1678.
+
+<h2>Qué abrir</h2>
+<div class="grid-2">
+  <div class="card">
+    <h3>Consultar</h3>
+    <ul class="clean">
+      <li>Estado de un NEG → <strong>Dashboard</strong> o <strong>Iniciativas</strong></li>
+      <li>Contacto del squad → <strong>Squad</strong></li>
+      <li>MS citado en un NEG → <strong>Ficha de microservicio</strong></li>
+      <li>Repo GitHub → <strong>Catálogo MS</strong></li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Producir</h3>
+    <ul class="clean">
+      <li>Épica Solucionada + DET → <strong>Generar</strong> (o Guardar borrador)</li>
+      <li>Corregir contenido → <strong>Administrar</strong></li>
+      <li>Observaciones o publicar → informe, pestaña Iniciativa</li>
+    </ul>
+  </div>
 </div>
+
+<h2>Informe</h2>
+<p>
+  <strong>Iniciativa</strong> (negocio y observaciones), <strong>Solución</strong> (implementación),
+  <strong>Diagramas</strong> y <strong>Pruebas</strong>. Compartir copia la URL del portal con la sección.
+  <strong>Aprobar y Publicar</strong> solo lo confirma el líder técnico cuando el estado es En revisión.
+</p>

@@ -10,9 +10,9 @@ import { IniciativasPage } from './pages/iniciativas/iniciativas';
 import { LoginPage } from './pages/login/login';
 import { MsAgreementPage } from './pages/ms-agreement/ms-agreement';
 import { PerfilPage } from './pages/perfil/perfil';
-import { CredencialesPage } from './pages/credenciales/credenciales';
+import { SquadPage } from './pages/squad/squad';
 import { UsuariosPage } from './pages/usuarios/usuarios';
-import { FichaIniciativaPage, FichaMsPage, HubInfoPage, VisionPage } from './pages/static/static-pages';
+import { FichaIniciativaPage, FichaMsPage, VisionPage } from './pages/static/static-pages';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -24,8 +24,8 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', component: DashboardPage },
+      { path: 'squad', component: SquadPage },
       { path: 'vision', component: VisionPage },
-      { path: 'hub', component: HubInfoPage },
       { path: 'ficha-iniciativa', component: FichaIniciativaPage },
       { path: 'ficha-ms', component: FichaMsPage },
       { path: 'generar', component: GenerarPage },
@@ -37,7 +37,6 @@ export const routes: Routes = [
       { path: 'ms-soporte', component: CatalogTablePage, data: { group: 'soporte' } },
       { path: 'ms-agreement', component: MsAgreementPage },
       { path: 'usuarios', component: UsuariosPage, canActivate: [adminGuard] },
-      { path: 'credenciales', component: CredencialesPage, canActivate: [adminGuard] },
       { path: 'perfil', component: PerfilPage }
     ]
   },

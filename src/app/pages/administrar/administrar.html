@@ -1,152 +1,259 @@
 <div class="admin-main">
   <div class="toolbar">
     <div>
-      <h1>Administrar</h1>
-      <p class="lede muted">Elige una iniciativa, corrige o quita información inconsistente y guarda. El informe anterior se respalda.</p>
+      <h1>Administrar documentación</h1>
+      <p class="lede muted">Filtra por estado y modifica o elimina la documentación. El informe anterior se respalda al guardar.</p>
     </div>
-    @if (doc()) {
-      <div class="actions">
-        <a class="btn secondary" [href]="previewUrl()" target="_blank" rel="noopener">Vista previa</a>
-        <button type="button" class="btn secondary" (click)="deleteDoc()">Eliminar iniciativa</button>
-        <button type="button" class="btn primary" [disabled]="saving" (click)="save()">Guardar</button>
-      </div>
-    }
   </div>
 
-  <label class="field admin-pick">
-    <span class="label">Iniciativa</span>
-    <select [(ngModel)]="key" (ngModelChange)="load()">
-      <option value="">Selecciona una clave…</option>
-      @for (item of items(); track item.key) {
-        <option [value]="item.key">{{ item.key }} · {{ item.title }}</option>
-      }
-    </select>
-  </label>
+  <div class="admin-filters">
+    <label class="field admin-pick">
+      <span class="label">Estado</span>
+      <select [(ngModel)]="statusFilter">
+        @for (option of statusOptions; track option.id) {
+          <option [value]="option.id">{{ option.label }}</option>
+        }
+      </select>
+    </label>
+    <label class="field admin-search">
+      <span class="label">Buscar</span>
+      <input type="search" placeholder="Buscar por código o nombre" [(ngModel)]="query" />
+    </label>
+  </div>
 
-  @if (error) {
+  @if (error && !editorOpen()) {
     <div class="callout warn"><strong>Error:</strong> {{ error }}</div>
   }
-  <p class="tertiary">{{ status }}</p>
 
-  @if (doc(); as current) {
-    <div class="filters" id="admin-tabs">
-      @for (t of ['iniciativa', 'solucion', 'diagramas', 'pruebas']; track t) {
-        <button type="button" class="pill" [class.active]="tab === t" (click)="tab = t">
-          {{ t.charAt(0).toUpperCase() + t.slice(1) }}
-        </button>
+  <div class="table-wrap admin-table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of filteredRows(); track row.key) {
+          <tr>
+            <td>{{ row.key }}</td>
+            <td>{{ row.title }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.success]="statusOf(row) === 'publicada'"
+                [class.warn]="statusOf(row) === 'desactualizada'"
+                [class.info]="statusOf(row) === 'revision'"
+                [class.draft]="statusOf(row) === 'borrador'"
+              >{{ statusLabel(row) }}</span>
+            </td>
+            <td>{{ fmt(row.updated) }}</td>
+            <td>
+              <div class="admin-table-actions">
+                <button type="button" class="link-btn" (click)="edit(row)">Modificar</button>
+                <button type="button" class="link-btn" (click)="askDelete(row)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="no-data">{{ emptyMessage() }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (editorOpen()) {
+  <div class="register-overlay admin-edit-overlay" (click)="onOverlayClick($event, 'edit')">
+    <div class="register-card admin-edit-card" role="dialog" aria-modal="true" aria-labelledby="admin-edit-title"
+      (click)="$event.stopPropagation()">
+      <div class="admin-edit-head">
+        <div>
+          <h2 id="admin-edit-title">Modificar {{ key }}</h2>
+          @if (status) {
+            <p class="muted">{{ status }}</p>
+          }
+        </div>
+        <div class="admin-edit-actions">
+          @if (doc()) {
+            <a class="btn secondary" [href]="previewUrl()" target="_blank" rel="noopener">Vista previa</a>
+            <button type="button" class="btn secondary" (click)="askDelete()">Eliminar documentación</button>
+            <button type="button" class="btn primary" [disabled]="saving || !doc()" (click)="save()">Guardar</button>
+          }
+          <button type="button" class="btn-secondary" (click)="closeEditor()">Cancelar</button>
+        </div>
+      </div>
+
+      @if (error) {
+        <div class="callout warn"><strong>Error:</strong> {{ error }}</div>
+      }
+
+      @if (!doc()) {
+        <p class="muted">Cargando documentación…</p>
+      } @else {
+        @if (doc(); as current) {
+          <div class="filters" id="admin-tabs">
+            @for (t of tabs; track t.id) {
+              <button type="button" class="pill" [class.active]="tab === t.id" (click)="tab = t.id">
+                {{ t.label }}
+              </button>
+            }
+          </div>
+
+          @if (current.structured) {
+            @if (tab === 'iniciativa') {
+              <label class="field"><span class="label">Título</span><input [(ngModel)]="fields.title" /></label>
+              <label class="field"><span class="label">Subtítulo</span><input [(ngModel)]="fields.subtitle" /></label>
+              <label class="field"><span class="label">Objetivo</span><textarea [(ngModel)]="fields.objective"></textarea></label>
+              <label class="field"><span class="label">En alcance</span><textarea [(ngModel)]="fields.inScope"></textarea></label>
+              <label class="field"><span class="label">Fuera de alcance</span><textarea [(ngModel)]="fields.outScope"></textarea></label>
+              <label class="field"><span class="label">Figma</span><input [(ngModel)]="fields.figmaUrl" /></label>
+              <label class="field"><span class="label">Jira · resumen</span><input [(ngModel)]="fields.jiraSummary" /></label>
+              <label class="field"><span class="label">Jira · responsable</span><input [(ngModel)]="fields.jiraAssignee" /></label>
+              <label class="field"><span class="label">Jira · estado</span><input [(ngModel)]="fields.jiraStatus" /></label>
+              <div class="admin-block">
+                <div class="admin-block-head"><h3>Endpoints</h3><button type="button" class="btn secondary btn-sm" (click)="add('endpoints')">Agregar</button></div>
+                @for (row of endpoints; track $index) {
+                  <div class="admin-row">
+                    <input placeholder="GET" [(ngModel)]="row.method" />
+                    <input placeholder="/path" [(ngModel)]="row.path" />
+                    <input placeholder="Descripción" [(ngModel)]="row.description" />
+                    <button type="button" class="link-btn" (click)="remove(endpoints, $index)">Quitar</button>
+                  </div>
+                }
+              </div>
+              <div class="admin-block">
+                <div class="admin-block-head"><h3>Microservicios</h3><button type="button" class="btn secondary btn-sm" (click)="add('microservices')">Agregar</button></div>
+                @for (row of microservices; track $index) {
+                  <div class="admin-row">
+                    <input placeholder="ch-mbbk-…" [(ngModel)]="row.name" />
+                    <input placeholder="Nuevo / Modificado" [(ngModel)]="row.tag" />
+                    <input placeholder="Contexto" [(ngModel)]="row.context" />
+                    <button type="button" class="link-btn" (click)="remove(microservices, $index)">Quitar</button>
+                  </div>
+                }
+              </div>
+            }
+            @if (tab === 'solucion') {
+              <label class="field"><span class="label">Propuesta</span><textarea [(ngModel)]="fields.solutionLead"></textarea></label>
+              <label class="field"><span class="label">Reglas</span><textarea [(ngModel)]="fields.rules"></textarea></label>
+              <label class="field"><span class="label">Riesgos</span><textarea [(ngModel)]="fields.risks"></textarea></label>
+              <label class="field"><span class="label">Microservicio responsable</span><input [(ngModel)]="fields.ownerMs" /></label>
+              <div class="admin-block">
+                <div class="admin-block-head"><h3>Contraste DET vs propuesta</h3><button type="button" class="btn secondary btn-sm" (click)="add('contrast')">Agregar</button></div>
+                @for (row of contrast; track $index) {
+                  <div class="admin-row">
+                    <input placeholder="Tema" [(ngModel)]="row.tema" />
+                    <input placeholder="DET" [(ngModel)]="row.det" />
+                    <input placeholder="Propuesta" [(ngModel)]="row.propuesta" />
+                    <button type="button" class="link-btn" (click)="remove(contrast, $index)">Quitar</button>
+                  </div>
+                }
+              </div>
+            }
+            @if (tab === 'diagramas') {
+              <div class="admin-block">
+                <div class="admin-block-head"><h3>Visores</h3><button type="button" class="btn secondary btn-sm" (click)="add('diagrams')">Agregar</button></div>
+                @for (row of diagrams; track $index) {
+                  <div class="admin-row admin-row-4">
+                    <input placeholder="Secuencia" [(ngModel)]="row.kind" />
+                    <input placeholder="Etiqueta" [(ngModel)]="row.label" />
+                    <input placeholder="diagrams/archivo.html" [(ngModel)]="row.src" />
+                    <input placeholder="Descripción" [(ngModel)]="row.description" />
+                    <button type="button" class="link-btn" (click)="remove(diagrams, $index)">Quitar</button>
+                  </div>
+                }
+              </div>
+              <label class="field"><span class="label">Pendientes de diagrama</span><textarea [(ngModel)]="fields.pendingDiagrams"></textarea></label>
+            }
+            @if (tab === 'pruebas') {
+              <div class="tests-upload card" style="padding:16px;margin-bottom:16px">
+                <h3>Adjuntar Excel o CSV</h3>
+                <div class="tests-upload-grid" style="display:flex;justify-content:space-between;gap:16px 24px;flex-wrap:wrap;align-items:center">
+                  <div class="informe-toolbar-actions">
+                    <label class="btn secondary">
+                      Elegir archivo
+                      <input type="file" accept=".csv,.txt,.xlsx" hidden (change)="onTestsFile($event)" />
+                    </label>
+                    <button type="button" class="btn primary" [disabled]="!testFile || !featureBranch.trim() || testsUploading()" (click)="uploadTests()">
+                      {{ testsUploading() ? 'Validando código…' : 'Regenerar pruebas' }}
+                    </button>
+                  </div>
+                  <label class="field" style="display:flex;flex-direction:row;align-items:center;gap:10px;min-width:min(280px,100%);flex:1;max-width:520px;margin:0">
+                    <span class="label" style="white-space:nowrap">Rama Feature</span>
+                    <input type="url" placeholder="https://github.com/org/repo/tree/feature/..." [(ngModel)]="featureBranch" />
+                  </label>
+                </div>
+                @if (testFileName()) {
+                  <p class="tertiary">{{ testFileName() }}</p>
+                }
+              </div>
+              <div class="admin-block">
+                <div class="admin-block-head"><h3>Casos de prueba</h3><button type="button" class="btn secondary btn-sm" (click)="add('cases')">Agregar</button></div>
+                @for (row of cases; track $index) {
+                  <div class="admin-row admin-row-5">
+                    <input placeholder="ID" [(ngModel)]="row.id" />
+                    <input placeholder="Caso de prueba (escenario)" [(ngModel)]="row.title" />
+                    <input placeholder="Resultado" [(ngModel)]="row.result" />
+                    <input placeholder="Evidencia / por qué no cumple" [(ngModel)]="row.evidence" />
+                    <button type="button" class="link-btn" (click)="remove(cases, $index)">Quitar</button>
+                  </div>
+                }
+              </div>
+            }
+          } @else {
+            <p class="muted">Este informe no tiene modelo estructurado. Edita el HTML de la sección.</p>
+            <label class="field">
+              <span class="label">HTML · {{ tab }}</span>
+              <textarea class="html-area" [(ngModel)]="html[tab]"></textarea>
+            </label>
+          }
+        }
       }
     </div>
+  </div>
+}
 
-    @if (current.structured) {
-      @if (tab === 'iniciativa') {
-        <label class="field"><span class="label">Título</span><input [(ngModel)]="fields.title" /></label>
-        <label class="field"><span class="label">Subtítulo</span><input [(ngModel)]="fields.subtitle" /></label>
-        <label class="field"><span class="label">Objetivo</span><textarea [(ngModel)]="fields.objective"></textarea></label>
-        <label class="field"><span class="label">En alcance</span><textarea [(ngModel)]="fields.inScope"></textarea></label>
-        <label class="field"><span class="label">Fuera de alcance</span><textarea [(ngModel)]="fields.outScope"></textarea></label>
-        <label class="field"><span class="label">Figma</span><input [(ngModel)]="fields.figmaUrl" /></label>
-        <label class="field"><span class="label">Jira · resumen</span><input [(ngModel)]="fields.jiraSummary" /></label>
-        <label class="field"><span class="label">Jira · responsable</span><input [(ngModel)]="fields.jiraAssignee" /></label>
-        <label class="field"><span class="label">Jira · estado</span><input [(ngModel)]="fields.jiraStatus" /></label>
-        <div class="admin-block">
-          <div class="admin-block-head"><h3>Endpoints</h3><button type="button" class="btn secondary btn-sm" (click)="add('endpoints')">Agregar</button></div>
-          @for (row of endpoints; track $index) {
-            <div class="admin-row">
-              <input placeholder="GET" [(ngModel)]="row.method" />
-              <input placeholder="/path" [(ngModel)]="row.path" />
-              <input placeholder="Descripción" [(ngModel)]="row.description" />
-              <button type="button" class="link-btn" (click)="remove(endpoints, $index)">Quitar</button>
-            </div>
+@if (deleteOpen()) {
+  <div class="register-overlay" (click)="onOverlayClick($event, 'delete')">
+    <div class="register-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="admin-delete-title"
+      (click)="$event.stopPropagation()">
+      <h2 id="admin-delete-title">Eliminar documentación</h2>
+      <p>¿Estás seguro que quieres eliminar <strong>{{ pendingDelete()?.key }}</strong>?</p>
+      <p class="muted">
+        @if (pendingDelete(); as pending) {
+          @if (statusOf(pending) === 'borrador') {
+            Se quitará el borrador de la lista.
+          } @else {
+            El informe pasa a la papelera. Esta acción no se puede deshacer desde aquí.
           }
-        </div>
-        <div class="admin-block">
-          <div class="admin-block-head"><h3>Microservicios</h3><button type="button" class="btn secondary btn-sm" (click)="add('microservices')">Agregar</button></div>
-          @for (row of microservices; track $index) {
-            <div class="admin-row">
-              <input placeholder="ch-mbbk-…" [(ngModel)]="row.name" />
-              <input placeholder="Nuevo / Modificado" [(ngModel)]="row.tag" />
-              <input placeholder="Contexto" [(ngModel)]="row.context" />
-              <button type="button" class="link-btn" (click)="remove(microservices, $index)">Quitar</button>
-            </div>
-          }
-        </div>
-      }
-      @if (tab === 'solucion') {
-        <label class="field"><span class="label">Propuesta</span><textarea [(ngModel)]="fields.solutionLead"></textarea></label>
-        <label class="field"><span class="label">Reglas</span><textarea [(ngModel)]="fields.rules"></textarea></label>
-        <label class="field"><span class="label">Riesgos</span><textarea [(ngModel)]="fields.risks"></textarea></label>
-        <label class="field"><span class="label">Microservicio responsable</span><input [(ngModel)]="fields.ownerMs" /></label>
-        <div class="admin-block">
-          <div class="admin-block-head"><h3>Contraste DET vs propuesta</h3><button type="button" class="btn secondary btn-sm" (click)="add('contrast')">Agregar</button></div>
-          @for (row of contrast; track $index) {
-            <div class="admin-row">
-              <input placeholder="Tema" [(ngModel)]="row.tema" />
-              <input placeholder="DET" [(ngModel)]="row.det" />
-              <input placeholder="Propuesta" [(ngModel)]="row.propuesta" />
-              <button type="button" class="link-btn" (click)="remove(contrast, $index)">Quitar</button>
-            </div>
-          }
-        </div>
-      }
-      @if (tab === 'diagramas') {
-        <div class="admin-block">
-          <div class="admin-block-head"><h3>Visores</h3><button type="button" class="btn secondary btn-sm" (click)="add('diagrams')">Agregar</button></div>
-          @for (row of diagrams; track $index) {
-            <div class="admin-row admin-row-4">
-              <input placeholder="Secuencia" [(ngModel)]="row.kind" />
-              <input placeholder="Etiqueta" [(ngModel)]="row.label" />
-              <input placeholder="diagrams/archivo.html" [(ngModel)]="row.src" />
-              <input placeholder="Descripción" [(ngModel)]="row.description" />
-              <button type="button" class="link-btn" (click)="remove(diagrams, $index)">Quitar</button>
-            </div>
-          }
-        </div>
-        <label class="field"><span class="label">Pendientes de diagrama</span><textarea [(ngModel)]="fields.pendingDiagrams"></textarea></label>
-      }
-      @if (tab === 'pruebas') {
-        <div class="tests-upload card" style="padding:16px;margin-bottom:16px">
-          <h3>Adjuntar Excel o CSV</h3>
-          <div class="tests-upload-grid" style="display:flex;justify-content:space-between;gap:16px 24px;flex-wrap:wrap;align-items:center">
-            <div class="informe-toolbar-actions">
-              <label class="btn secondary">
-                Elegir archivo
-                <input type="file" accept=".csv,.txt,.xlsx" hidden (change)="onTestsFile($event)" />
-              </label>
-              <button type="button" class="btn primary" [disabled]="!testFile || !featureBranch.trim() || testsUploading()" (click)="uploadTests()">
-                {{ testsUploading() ? 'Validando código…' : 'Regenerar pruebas' }}
-              </button>
-            </div>
-            <label class="field" style="display:flex;flex-direction:row;align-items:center;gap:10px;min-width:min(280px,100%);flex:1;max-width:520px;margin:0">
-              <span class="label" style="white-space:nowrap">Rama Feature</span>
-              <input type="url" placeholder="https://github.com/org/repo/tree/feature/..." [(ngModel)]="featureBranch" />
-            </label>
-          </div>
-          @if (testFileName()) {
-            <p class="tertiary">{{ testFileName() }}</p>
-          }
-        </div>
-        <div class="admin-block">
-          <div class="admin-block-head"><h3>Casos de prueba</h3><button type="button" class="btn secondary btn-sm" (click)="add('cases')">Agregar</button></div>
-          @for (row of cases; track $index) {
-            <div class="admin-row admin-row-5">
-              <input placeholder="ID" [(ngModel)]="row.id" />
-              <input placeholder="Caso de prueba (escenario)" [(ngModel)]="row.title" />
-              <input placeholder="Resultado" [(ngModel)]="row.result" />
-              <input placeholder="Evidencia / por qué no cumple" [(ngModel)]="row.evidence" />
-              <button type="button" class="link-btn" (click)="remove(cases, $index)">Quitar</button>
-            </div>
-          }
-        </div>
-      }
-    } @else {
-      <p class="muted">Este informe no tiene modelo estructurado. Edita el HTML de la sección.</p>
-      <label class="field">
-        <span class="label">HTML · {{ tab }}</span>
-        <textarea class="html-area" [(ngModel)]="html[tab]"></textarea>
-      </label>
-    }
-  }
-</div>
+        }
+      </p>
+      <div class="register-actions">
+        <button type="button" class="btn-secondary" (click)="closeDelete()">Cancelar</button>
+        <button type="button" class="btn-danger" [disabled]="deleteSubmitting()" (click)="confirmDelete()">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (testsUploading()) {
+  <div class="gen-overlay" role="dialog" aria-modal="true" aria-labelledby="tests-modal-title" aria-busy="true">
+    <div class="gen-modal">
+      <div class="gen-spinner" aria-hidden="true"></div>
+      <h2 id="tests-modal-title">Reprocesando pruebas</h2>
+      <p>Se están reprocesando las pruebas para su validación.</p>
+    </div>
+  </div>
+}
+
 @if (toast) {
   <div class="toast show">{{ toast }}</div>
 }

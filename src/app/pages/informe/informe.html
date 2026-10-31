@@ -1,0 +1,125 @@
+<div class="informe-shell">
+<iframe
+  #frame
+  class="doc-gen-frame"
+  [src]="src()"
+  title="Documentación de iniciativa"
+  (load)="onFrameLoad(frame)"
+></iframe>
+
+<section class="doc-review" aria-labelledby="doc-review-title" [hidden]="reviewInFrame()">
+  <div class="doc-review-head">
+    <div>
+      <h2 id="doc-review-title">Observaciones y respuestas</h2>
+      <p class="muted">
+        El líder técnico marca lo que no cumple. El dueño de la iniciativa responde cuando ya lo corrigió.
+      </p>
+    </div>
+    @if (review()?.status === 'publicada') {
+      <span class="tag published">Publicada</span>
+    } @else if (review()?.status === 'desactualizada') {
+      <span class="tag stale">Desactualizada</span>
+    } @else {
+      <span class="tag review">En revisión</span>
+    }
+  </div>
+
+  @if (reviewError()) {
+    <div class="callout warn">{{ reviewError() }}</div>
+  }
+  @if (review()?.status === 'desactualizada' && review()?.missing?.length) {
+    <div class="callout warn">
+      Documentación desactualizada: faltan {{ review()!.missing!.join(' y ') }}. Completa los adjuntos y vuelve a generar para pasar a En revisión.
+    </div>
+  }
+
+  <div class="doc-comments">
+    @if (loadingReview()) {
+      <p class="muted">Cargando comentarios…</p>
+    } @else if (!comments().length) {
+      <p class="muted">Aún no hay observaciones ni respuestas.</p>
+    }
+    @for (item of comments(); track item.id) {
+      <article class="doc-comment" [class.lead]="item.kind === 'lead'" [class.owner]="item.kind !== 'lead'">
+        <header>
+          <strong>{{ item.author }}</strong>
+          <span>{{ item.kind === 'lead' ? 'Líder técnico' : 'Dueño de la iniciativa' }}</span>
+          <span>{{ item.role }}</span>
+          <time>{{ formatWhen(item.createdAt) }}</time>
+        </header>
+        @if (editingId() === item.id) {
+          <textarea rows="3" maxlength="2000" [(ngModel)]="editDraft"></textarea>
+          <div class="doc-comment-form-actions">
+            <button type="button" class="btn-secondary" (click)="cancelEdit()">Cancelar</button>
+            <button type="button" class="btn-primary" [disabled]="savingComment() || !editDraft.trim()" (click)="saveEdit(item)">
+              Guardar
+            </button>
+          </div>
+        } @else {
+          <p>{{ item.text }}</p>
+          @if (canEditComment(item) || canDeleteComment(item)) {
+            <div class="doc-comment-actions">
+              @if (canEditComment(item)) {
+                <button type="button" class="link-btn" (click)="startEdit(item)">Editar</button>
+              }
+              @if (canDeleteComment(item)) {
+                <button type="button" class="link-btn" (click)="removeComment(item)">Eliminar</button>
+              }
+            </div>
+          }
+        }
+      </article>
+    }
+  </div>
+
+  <form class="doc-comment-form" (ngSubmit)="addComment()">
+    <label for="doc-comment">Nuevo comentario</label>
+    <textarea
+      id="doc-comment"
+      name="comment"
+      rows="4"
+      maxlength="2000"
+      [placeholder]="isTechLead() ? 'Indica qué no cumple o qué hay que corregir en la documentación.' : 'Indica qué se corrigió o actualizó para responder al líder técnico.'"
+      [(ngModel)]="draft"
+      [disabled]="savingComment()"
+    ></textarea>
+    <div class="doc-comment-form-actions">
+      <button type="submit" class="btn-primary" [disabled]="savingComment() || !draft.trim()">
+        Publicar comentario
+      </button>
+    </div>
+  </form>
+
+  @if (isTechLead()) {
+    <div class="doc-review-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        [disabled]="!canApprove()"
+        (click)="openApprove()"
+      >
+        Aprobar documentación
+      </button>
+    </div>
+  }
+</section>
+</div>
+
+@if (approveOpen()) {
+  <div class="register-overlay" (click)="closeApprove($event)">
+    <div class="register-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="approve-title"
+      (click)="$event.stopPropagation()">
+      <h2 id="approve-title">Aprobar y Publicar</h2>
+      <p>
+        ¿Confirmas que la documentación de <strong>{{ key() }}</strong> está lista para aprobar y publicar?
+      </p>
+      <p class="muted">Quedará marcada como publicada para el squad.</p>
+      <div class="register-actions">
+        <button type="button" class="btn-secondary" (click)="approveOpen.set(false)">Cancelar</button>
+        <button type="button" class="btn-primary" [disabled]="publishing()" (click)="confirmApprove()">
+          Aprobar y Publicar
+        </button>
+      </div>
+    </div>
+  </div>
+}

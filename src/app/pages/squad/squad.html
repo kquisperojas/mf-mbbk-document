@@ -1,0 +1,129 @@
+<div class="usuarios-toolbar">
+  <div>
+    <h1>Miembros del SQUAD canales digitales</h1>
+    <p class="lede muted">
+      @if (auth.canManageSquad()) {
+        Directorio de la célula. Solo el administrador y el líder técnico pueden crear, modificar o eliminar miembros.
+      } @else {
+        Directorio de contactos de la célula. Solo puedes consultar los datos.
+      }
+    </p>
+  </div>
+</div>
+
+@if (error()) {
+  <div class="login-error show" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+  <div class="callout success">{{ success() }}</div>
+}
+
+<div class="usuarios-table-head">
+  <h2>Registrados</h2>
+  @if (auth.canManageSquad()) {
+    <button type="button" class="btn-primary usuarios-create-btn" (click)="startCreate()">Agregar miembro</button>
+  }
+</div>
+<div class="table-wrap">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>N°</th>
+        <th>Nombre</th>
+        <th>Rol</th>
+        <th>Correo</th>
+        <th>Número</th>
+        @if (auth.canManageSquad()) {
+          <th>Acciones</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (member of members(); track member.id) {
+        <tr>
+          <td>{{ member.orden }}</td>
+          <td>{{ member.nombre }}</td>
+          <td>{{ member.rol }}</td>
+          <td>{{ member.correo || '—' }}</td>
+          <td>{{ member.numero || '—' }}</td>
+          @if (auth.canManageSquad()) {
+            <td class="row-actions">
+              <button type="button" class="link-btn" (click)="startEdit(member)">Modificar</button>
+              <button type="button" class="link-btn danger" (click)="askDelete(member)">Eliminar</button>
+            </td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="auth.canManageSquad() ? 6 : 5">Aún no hay miembros del squad.</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (formOpen()) {
+  <div class="register-overlay user-form-overlay" (click)="onOverlayClick($event, 'form')">
+    <div class="register-card user-form-card" role="dialog" aria-modal="true" aria-labelledby="squad-form-title"
+      (click)="$event.stopPropagation()">
+      <form class="register-form" (ngSubmit)="saveForm()" novalidate>
+        <h2 id="squad-form-title">{{ formMode() === 'create' ? 'Agregar miembro' : 'Modificar miembro' }}</h2>
+        <p class="muted">
+          @if (formMode() === 'create') {
+            Completa los datos y guarda. El N° se asigna solo, en orden incremental.
+          } @else {
+            Actualiza los datos y guarda.
+          }
+        </p>
+        @if (formError()) {
+          <div class="login-error show" role="alert">{{ formError() }}</div>
+        }
+        <div class="user-form-grid">
+          <div class="field">
+            <label for="form-nombre">Nombre</label>
+            <input id="form-nombre" name="nombre" type="text" required maxlength="150"
+              [(ngModel)]="nombre" />
+          </div>
+          <div class="field">
+            <label for="form-rol">Rol</label>
+            <input id="form-rol" name="rol" type="text" required maxlength="150"
+              placeholder="PO, Scrum Master, QA…" [(ngModel)]="rol" />
+          </div>
+          <div class="field">
+            <label for="form-correo">Correo</label>
+            <input id="form-correo" name="correo" type="email" maxlength="150"
+              placeholder="opcional" [(ngModel)]="correo" />
+          </div>
+          <div class="field">
+            <label for="form-numero">Número</label>
+            <input id="form-numero" name="numero" type="text" maxlength="40"
+              placeholder="opcional" [(ngModel)]="numero" />
+          </div>
+        </div>
+        <div class="register-actions">
+          <button type="button" class="btn-secondary" (click)="closeForm()">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="formSubmitting()">
+            {{ formMode() === 'create' ? 'Guardar miembro' : 'Guardar cambios' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+@if (deleteOpen()) {
+  <div class="register-overlay" (click)="onOverlayClick($event, 'delete')">
+    <div class="register-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="squad-delete-title"
+      (click)="$event.stopPropagation()">
+      <h2 id="squad-delete-title">Eliminar miembro</h2>
+      <p>¿Estás seguro que quieres eliminar a <strong>{{ pendingDelete()?.nombre }}</strong>?</p>
+      <p class="muted">Esta acción no se puede deshacer.</p>
+      <div class="register-actions">
+        <button type="button" class="btn-secondary" (click)="closeDelete()">Cancelar</button>
+        <button type="button" class="btn-danger" [disabled]="deleteSubmitting()" (click)="confirmDelete()">
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}

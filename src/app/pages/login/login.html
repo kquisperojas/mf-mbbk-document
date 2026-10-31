@@ -5,8 +5,7 @@
     <p>Hub de la célula para encontrar iniciativas, microservicios y el estado de cada ficha. El acceso usa tu usuario de GitHub.</p>
   </div>
   <div class="login-meta">
-    v1.0 hub · Referencia visual NEG-1678<br />
-    mf-mbbk-document · Angular 21
+    v1.0 hub · Célula Canales Digitales
   </div>
 </section>
 
@@ -45,37 +44,38 @@
 </section>
 
 @if (registerOpen()) {
-  <div class="register-overlay" (click)="onOverlayClick($event)">
-    <div class="register-card" role="dialog" aria-modal="true" aria-labelledby="register-title" (click)="$event.stopPropagation()">
+  <div class="register-overlay user-form-overlay" (click)="onOverlayClick($event)">
+    <div class="register-card user-form-card" role="dialog" aria-modal="true" aria-labelledby="register-title"
+      (click)="$event.stopPropagation()">
       <form class="register-form" (ngSubmit)="register()" novalidate>
         <h2 id="register-title">Crear usuario</h2>
-        <p class="muted">Usuario GitHub (sin espacios ni @), correo, contraseña de 8+ caracteres y nombre.</p>
+        <p class="muted">Usuario GitHub (sin espacios ni @), correo, contraseña de 8+ caracteres y nombre. El rol puede ser Software engineer o Tech Lead.</p>
         @if (regError()) {
           <div class="login-error show" role="alert">{{ regError() }}</div>
         }
-        <div class="register-scroll">
+        <div class="user-form-grid">
           <div class="field">
             <label for="reg-username">Usuario GitHub</label>
             <input id="reg-username" name="regUsername" type="text" required [(ngModel)]="regUsername"
               placeholder="kquispe" spellcheck="false" />
           </div>
           <div class="field">
+            <label for="reg-name">Nombre</label>
+            <input id="reg-name" name="regNombre" type="text" required [(ngModel)]="regNombre" />
+          </div>
+          <div class="field">
             <label for="reg-email">Correo</label>
             <input id="reg-email" name="regEmail" type="email" required [(ngModel)]="regEmail" />
           </div>
-          <div class="field">
+          <div class="field user-form-span">
             <label for="reg-password">Contraseña</label>
             <div class="pwd-wrap">
               <input id="reg-password" name="regPassword" [type]="showRegPassword ? 'text' : 'password'"
-                required minlength="8" [(ngModel)]="regPassword" />
+                required minlength="8" placeholder="Mínimo 8 caracteres" [(ngModel)]="regPassword" />
               <button type="button" class="pwd-toggle" (click)="showRegPassword = !showRegPassword">
                 {{ showRegPassword ? 'Ocultar' : 'Mostrar' }}
               </button>
             </div>
-          </div>
-          <div class="field">
-            <label for="reg-name">Nombre</label>
-            <input id="reg-name" name="regNombre" type="text" required [(ngModel)]="regNombre" />
           </div>
           <div class="field">
             <label for="reg-role">Rol</label>
@@ -113,21 +113,19 @@
         @if (forgotError()) {
           <div class="login-error show" role="alert">{{ forgotError() }}</div>
         }
-        <div class="register-scroll">
-          <div class="field">
-            <label for="forgot-username">Usuario</label>
-            <input id="forgot-username" name="forgotUsername" type="text" required minlength="2" maxlength="39"
-              spellcheck="false" autocomplete="username" [(ngModel)]="forgotUsername" />
-          </div>
-          <div class="field">
-            <label for="forgot-password">Contraseña nueva</label>
-            <div class="pwd-wrap">
-              <input id="forgot-password" name="forgotPassword" [type]="showForgotPassword ? 'text' : 'password'"
-                required minlength="8" autocomplete="new-password" [(ngModel)]="forgotPassword" />
-              <button type="button" class="pwd-toggle" (click)="showForgotPassword = !showForgotPassword">
-                {{ showForgotPassword ? 'Ocultar' : 'Mostrar' }}
-              </button>
-            </div>
+        <div class="field">
+          <label for="forgot-username">Usuario GitHub</label>
+          <input id="forgot-username" name="forgotUsername" type="text" required minlength="2" maxlength="39"
+            spellcheck="false" autocomplete="username" [(ngModel)]="forgotUsername" />
+        </div>
+        <div class="field">
+          <label for="forgot-password">Contraseña nueva</label>
+          <div class="pwd-wrap">
+            <input id="forgot-password" name="forgotPassword" [type]="showForgotPassword ? 'text' : 'password'"
+              required minlength="8" autocomplete="new-password" [(ngModel)]="forgotPassword" />
+            <button type="button" class="pwd-toggle" (click)="showForgotPassword = !showForgotPassword">
+              {{ showForgotPassword ? 'Ocultar' : 'Mostrar' }}
+            </button>
           </div>
         </div>
         <div class="register-actions">

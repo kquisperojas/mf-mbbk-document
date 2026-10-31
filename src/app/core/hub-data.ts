@@ -1,4 +1,4 @@
-import { InitiativeRow, MsCard } from './models';
+import { InitiativeRow } from './models';
 
 export const HUB_INITIATIVES: InitiativeRow[] = [
   {
@@ -39,34 +39,6 @@ export const HUB_INITIATIVES: InitiativeRow[] = [
   }
 ];
 
-export const HUB_MS_CARDS: MsCard[] = [
-  {
-    name: 'ch-mbbk-customer-agreement-management-v1',
-    blurb: 'Administra acuerdos del cliente y, en NEG-1678, los endpoints de estado de cuenta.',
-    meta: 'Jarvis 1.0.1 · NEG-1678',
-    tag: 'Vigente',
-    tagClass: 'published',
-    search: 'ch-mbbk-customer-agreement-management-v1 acuerdos eecc statement jarvis 1.0.1 neg-1678',
-    route: '/portal/ms-agreement'
-  },
-  {
-    name: 'jsc-mbbk-user-preference',
-    blurb: 'Preferencias de producto (alias / viewType). Reutilizado por NEG-1678.',
-    meta: 'Ficha estable pendiente · no se inventa el catálogo',
-    tag: 'Referenciado',
-    tagClass: 'reuse',
-    search: 'jsc-mbbk-user-preference preferencias products-preference neg-1678'
-  },
-  {
-    name: 'ch-mbbk-correspondence',
-    blurb: 'Plantilla HTML del estado de cuenta según moneda.',
-    meta: 'Ficha estable pendiente · citado en NEG-1678',
-    tag: 'Referenciado',
-    tagClass: 'reuse',
-    search: 'ch-mbbk-correspondence plantilla pdf eecc neg-1678'
-  }
-];
-
 export const CATALOG_DESCRIPTIONS: Record<string, string> = {
   'bill-payment': 'Pago de servicios y recibos desde banca móvil MBBK.',
   'contact-form': 'Formularios de contacto y solicitudes del cliente en el canal MBBK.',
@@ -88,6 +60,15 @@ export const CATALOG_DESCRIPTIONS: Record<string, string> = {
 
 export const ADMIN_ROLE = 'Administrador';
 
-export const FALLBACK_ROLES = ['Software engineer', 'Tech Lead', 'Administrador'];
+export const SQUAD_MANAGER_ROLES = ['administrador', 'tech lead', 'lider tecnico'];
+
+export const FALLBACK_ROLES = ['Software engineer', 'Tech lead', 'Administrador'];
+
+export const PUBLIC_REGISTER_ROLES = ['Software engineer', 'Tech lead'];
+
+export function isPublicRegisterRole(nombre: string): boolean {
+  const value = (nombre || '').trim().toLowerCase();
+  return value === 'software engineer' || value === 'tech lead';
+}
 
 export const FALLBACK_SQUADS = ['Célula Canales Digitales'];

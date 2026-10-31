@@ -2,7 +2,7 @@ import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
-import { FALLBACK_ROLES, FALLBACK_SQUADS } from '../../core/hub-data';
+import { FALLBACK_ROLES, FALLBACK_SQUADS, PUBLIC_REGISTER_ROLES, isPublicRegisterRole } from '../../core/hub-data';
 import { CatalogItem } from '../../core/models';
 import { UserApiService } from '../../core/user-api.service';
 
@@ -58,9 +58,17 @@ export class LoginPage implements OnInit {
 
   private setRoles(rows: CatalogItem[]): void {
     const source = rows.length ? rows : FALLBACK_ROLES.map((nombre, i) => ({ id: String(i), nombre }));
-    const only = source.filter((row) => FALLBACK_ROLES.includes(row.nombre));
-    this.roles.set(only.length ? only : FALLBACK_ROLES.map((nombre, i) => ({ id: String(i), nombre })));
-    this.regRol = this.roles()[0].nombre;
+    const only = source.filter((row) => isPublicRegisterRole(row.nombre));
+    this.roles.set(only.length ? only : PUBLIC_REGISTER_ROLES.map((nombre, i) => ({ id: String(i), nombre })));
+    this.regRol = this.defaultPublicRole();
+  }
+
+  private defaultPublicRole(): string {
+    return (
+      this.roles().find((row) => row.nombre.toLowerCase() === 'software engineer')?.nombre ||
+      this.roles()[0]?.nombre ||
+      PUBLIC_REGISTER_ROLES[0]
+    );
   }
 
   private setSquads(rows: CatalogItem[]): void {
@@ -91,7 +99,7 @@ export class LoginPage implements OnInit {
     this.closeForgot();
     this.regError.set('');
     this.success.set('');
-    this.regRol = this.roles()[0]?.nombre || FALLBACK_ROLES[0];
+    this.regRol = this.defaultPublicRole();
     this.regSquad = this.squads()[0]?.nombre || FALLBACK_SQUADS[0];
     this.registerOpen.set(true);
   }
@@ -134,7 +142,7 @@ export class LoginPage implements OnInit {
     const githubUsername = this.forgotUsername.trim();
     const newPassword = this.forgotPassword;
     if (!githubUsername || !newPassword) {
-      this.forgotError.set('Completa usuario y contraseña nueva.');
+      this.forgotError.set('Completa usuario GitHub y contraseña nueva.');
       return;
     }
     if (newPassword.length < 8) {
@@ -165,12 +173,16 @@ export class LoginPage implements OnInit {
       email: this.regEmail.trim(),
       password: this.regPassword,
       nombre: this.regNombre.trim(),
-      rol: this.regRol || this.roles()[0]?.nombre || FALLBACK_ROLES[0],
+      rol: this.regRol || this.defaultPublicRole(),
       squad: this.regSquad || this.squads()[0]?.nombre || FALLBACK_SQUADS[0]
     };
     const invalid = this.api.validateCreate(payload);
     if (invalid) {
       this.regError.set(invalid);
+      return;
+    }
+    if (!isPublicRegisterRole(payload.rol)) {
+      this.regError.set('El registro solo permite Software engineer o Tech Lead.');
       return;
     }
     this.regSubmitting.set(true);

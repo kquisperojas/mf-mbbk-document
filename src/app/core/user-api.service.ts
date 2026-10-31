@@ -126,7 +126,7 @@ export class UserApiService {
 
   private fail(err: HttpErrorResponse | { name?: string; message?: string }, fallback: string) {
     if ((err as { name?: string }).name === 'TimeoutError' || (err as HttpErrorResponse).status === 0) {
-      return throwError(() => new Error('El API Java no responde en :8080. Arráncalo e inténtalo de nuevo.'));
+      return throwError(() => new Error('El servicio de usuarios no responde. Inténtalo de nuevo.'));
     }
     const http = err as HttpErrorResponse;
     const raw = http.error;

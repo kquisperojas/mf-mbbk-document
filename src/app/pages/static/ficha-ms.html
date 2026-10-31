@@ -1,13 +1,48 @@
-<h1>4. Ficha de microservicio</h1>
-<p class="lede muted">Vive en el hub, no dentro de cada NEG. Una iniciativa referencia al MS; no reescribe su definición.</p>
-<ul class="clean">
-  <li>Nombre, alias Jarvis, propósito</li>
-  <li>Owner / squad</li>
-  <li>Repo y rama estable</li>
-  <li>Versiones publicadas</li>
-  <li>Endpoints vigentes + curls</li>
-  <li>Iniciativas que lo modificaron</li>
-  <li>Dependencias</li>
-  <li>Estado: vigente / deprecado / en migración</li>
-</ul>
-<div class="callout">Ejemplo: NEG-1678 no “posee” <code>ch-mbbk-customer-agreement-management-v1</code>; solo registra el delta de esa iniciativa.</div>
+<h1>3. Ficha de microservicio</h1>
+<p class="lede muted">
+  Encuentra los microservicios citados en la documentación ya generada.
+  El código NEG o APP abre el informe.
+</p>
+
+<label class="docs-search">
+  <span class="docs-search-ico" aria-hidden="true"></span>
+  <input type="search" placeholder="Buscar por nombre de microservicio o código NEG (APP, NEG)"
+    [ngModel]="query()" (ngModelChange)="query.set($event)" />
+</label>
+
+@if (loading()) {
+  <p class="muted">Cargando microservicios citados en la documentación…</p>
+} @else if (error()) {
+  <div class="callout warn">{{ error() }}</div>
+}
+
+@if (!loading()) {
+  <div class="grid-3">
+    @for (card of filtered(); track card.name) {
+      <div class="card">
+        <h3>
+          @if (card.route) {
+            <a [routerLink]="card.route">{{ card.name }}</a>
+          } @else {
+            {{ card.name }}
+          }
+        </h3>
+        <div class="ficha-ms-cites">
+          @for (item of card.initiatives; track item.key) {
+            <a class="ficha-ms-cite" [routerLink]="['/portal/informe', item.key]">
+              <strong>{{ item.key }}</strong>
+            </a>
+          }
+        </div>
+      </div>
+    } @empty {
+      <p class="muted">
+        @if (rows().length) {
+          No hay microservicios que coincidan con la búsqueda.
+        } @else {
+          Aún no hay microservicios citados en documentación generada.
+        }
+      </p>
+    }
+  </div>
+}

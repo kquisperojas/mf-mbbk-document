@@ -17,7 +17,7 @@
     <p><strong>Squad:</strong> {{ auth.session()?.squad }}</p>
     <p><strong>Correo:</strong> {{ auth.session()?.email }}</p>
     <p>
-      <strong>Perfil Github:</strong>
+      <strong>Perfil GitHub:</strong>
       <a [href]="publicUrl()" target="_blank" rel="noopener">github.com/{{ publicHandle() }}</a>
     </p>
     <p class="tertiary">Último acceso en este navegador: {{ loginAt() }}</p>
@@ -25,8 +25,8 @@
 </div>
 
 @if (editOpen()) {
-  <div class="register-overlay" (click)="onOverlayClick($event)">
-    <div class="register-card" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title"
+  <div class="register-overlay user-form-overlay" (click)="onOverlayClick($event)">
+    <div class="register-card user-form-card" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title"
       (click)="$event.stopPropagation()">
       <form class="register-form" (ngSubmit)="save()" novalidate>
         <h2 id="edit-profile-title">Editar perfil</h2>
@@ -34,7 +34,7 @@
         @if (error()) {
           <div class="login-error show" role="alert">{{ error() }}</div>
         }
-        <div class="register-scroll">
+        <div class="user-form-grid">
           <div class="field">
             <label for="edit-usuario">Usuario</label>
             <input id="edit-usuario" name="githubUsername" type="text" required minlength="2" maxlength="39"
@@ -49,7 +49,7 @@
             <input id="edit-correo" name="email" type="email" required [(ngModel)]="email" />
           </div>
           <div class="field">
-            <label for="edit-github">Perfil Github</label>
+            <label for="edit-github">Perfil GitHub</label>
             <input id="edit-github" name="perfilGithub" type="text" required minlength="2" maxlength="39"
               spellcheck="false" placeholder="handle de GitHub" [(ngModel)]="perfilGithub" />
           </div>

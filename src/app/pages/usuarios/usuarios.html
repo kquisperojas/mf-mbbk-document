@@ -37,17 +37,13 @@
           <td>{{ user.rol }}</td>
           <td>{{ user.squad }}</td>
           <td class="row-actions">
-            <button type="button" class="link-btn" (click)="startCreate()">Crear</button>
             <button type="button" class="link-btn" (click)="startEdit(user)">Modificar</button>
             <button type="button" class="link-btn danger" (click)="askDelete(user)">Eliminar</button>
           </td>
         </tr>
       } @empty {
         <tr>
-          <td colspan="5">Aún no hay usuarios.</td>
-          <td class="row-actions">
-            <button type="button" class="link-btn" (click)="startCreate()">Crear</button>
-          </td>
+          <td colspan="6">Aún no hay usuarios.</td>
         </tr>
       }
     </tbody>
@@ -55,13 +51,14 @@
 </div>
 
 @if (formOpen()) {
-  <div class="register-overlay" (click)="onOverlayClick($event, 'form')">
-    <div class="register-card" role="dialog" aria-modal="true" aria-labelledby="user-form-title" (click)="$event.stopPropagation()">
+  <div class="register-overlay user-form-overlay" (click)="onOverlayClick($event, 'form')">
+    <div class="register-card user-form-card" role="dialog" aria-modal="true" aria-labelledby="user-form-title"
+      (click)="$event.stopPropagation()">
       <form class="register-form" (ngSubmit)="saveForm()" novalidate>
         <h2 id="user-form-title">{{ formMode() === 'create' ? 'Crear usuario' : 'Modificar usuario' }}</h2>
         <p class="muted">
           @if (formMode() === 'create') {
-            Completa los datos y guarda. El usuario queda en PostgreSQL.
+            Completa los datos y guarda. Rol y squad definen qué puede hacer en el portal.
           } @else {
             Actualiza los datos y guarda. La contraseña vacía se conserva.
           }
@@ -69,36 +66,36 @@
         @if (formError()) {
           <div class="login-error show" role="alert">{{ formError() }}</div>
         }
-        <div class="register-scroll">
+        <div class="user-form-grid">
           <div class="field">
             <label for="form-username">Usuario GitHub</label>
             <input id="form-username" name="githubUsername" type="text" required minlength="2" maxlength="39"
               spellcheck="false" placeholder="kquispe" [(ngModel)]="githubUsername" />
           </div>
           <div class="field">
-            <label for="form-email">Correo</label>
-            <input id="form-email" name="email" type="email" required [(ngModel)]="email" />
-          </div>
-          <div class="field">
-            <label for="form-password">Contraseña</label>
-            <div class="pwd-wrap">
-              <input id="form-password" name="password" [type]="showPassword ? 'text' : 'password'"
-                [required]="formMode() === 'create'" minlength="8"
-                [placeholder]="formMode() === 'edit' ? 'Dejar vacío para no cambiar' : ''"
-                [(ngModel)]="password" />
-              <button type="button" class="pwd-toggle" (click)="showPassword = !showPassword">
-                {{ showPassword ? 'Ocultar' : 'Mostrar' }}
-              </button>
-            </div>
-          </div>
-          <div class="field">
             <label for="form-nombre">Nombre</label>
             <input id="form-nombre" name="nombre" type="text" required [(ngModel)]="nombre" />
+          </div>
+          <div class="field">
+            <label for="form-email">Correo</label>
+            <input id="form-email" name="email" type="email" required [(ngModel)]="email" />
           </div>
           <div class="field">
             <label for="form-public">Perfil público</label>
             <input id="form-public" name="perfilPublico" type="text" maxlength="39" spellcheck="false"
               placeholder="handle de GitHub" [(ngModel)]="perfilPublico" />
+          </div>
+          <div class="field user-form-span">
+            <label for="form-password">Contraseña</label>
+            <div class="pwd-wrap">
+              <input id="form-password" name="password" [type]="showPassword ? 'text' : 'password'"
+                [required]="formMode() === 'create'" minlength="8"
+                [placeholder]="formMode() === 'edit' ? 'Dejar vacío para no cambiar' : 'Mínimo 8 caracteres'"
+                [(ngModel)]="password" />
+              <button type="button" class="pwd-toggle" (click)="showPassword = !showPassword">
+                {{ showPassword ? 'Ocultar' : 'Mostrar' }}
+              </button>
+            </div>
           </div>
           <div class="field">
             <label for="form-rol">Rol</label>

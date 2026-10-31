@@ -1,15 +1,16 @@
+<div class="catalog-main">
 <h1>{{ title }}</h1>
 <p class="lede muted">{{ lede }}</p>
 @if (status()) {
   <div class="callout" [class.warn]="warn()">{{ status() }}</div>
 }
-<div class="table-wrap">
+<div class="table-wrap catalog-table-wrap">
   <table class="data">
     <thead>
       <tr>
         <th>Item</th>
         <th>Nombre MS</th>
-        <th>Descripcion</th>
+        <th>Descripción</th>
         <th>Canal</th>
         <th>Owner</th>
         <th>Última Modificación</th>
@@ -54,4 +55,5 @@
       }
     </tbody>
   </table>
+</div>
 </div>

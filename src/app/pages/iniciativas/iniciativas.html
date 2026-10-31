@@ -1,23 +1,54 @@
 <div class="toolbar">
   <div>
     <h1>Documentación generada</h1>
-    <p class="lede muted">Elige un código para abrir su documentación en el menú Iniciativas.</p>
+    <p class="lede muted">Elige un código para abrir su documentación o continuar un borrador.</p>
   </div>
 </div>
 <label class="docs-search">
   <span class="docs-search-ico" aria-hidden="true"></span>
   <input type="search" placeholder="Buscar por clave o título" [ngModel]="query()" (ngModelChange)="query.set($event)" />
 </label>
+@if (generatedKey()) {
+  <div class="callout success">
+    <strong>Documentación lista:</strong> {{ generatedKey() }} ya está en esta lista. Ábrela para verla.
+  </div>
+}
 @if (error()) {
   <div class="callout warn"><strong>Error:</strong> {{ error() }}</div>
 }
 <div class="docs-list docs-list-only">
   @for (doc of filtered(); track doc.key) {
-    <a class="doc-item" [routerLink]="['/portal/informe', doc.key]">
-      <strong class="key">{{ doc.key }}</strong>
-      <span class="title">{{ doc.title }}</span>
-      <span class="meta"><span>{{ fmt(doc.updated) }}</span></span>
-    </a>
+    @if (isDraft(doc)) {
+      <a class="doc-item" [class.generated]="doc.key === generatedKey()" [routerLink]="['/portal/generar']" [queryParams]="{ draft: doc.key }">
+        <strong class="key">{{ doc.key }}</strong>
+        <span class="title">{{ doc.title }}</span>
+        <span class="meta">
+          <span
+            class="badge"
+            [class.success]="doc.status === 'publicada'"
+            [class.warn]="doc.status === 'desactualizada'"
+            [class.info]="doc.status === 'revision'"
+            [class.draft]="doc.status === 'borrador'"
+          >{{ doc.statusLabel || 'Borrador' }}</span>
+          <span>{{ fmt(doc.updated) }}</span>
+        </span>
+      </a>
+    } @else {
+      <a class="doc-item" [class.generated]="doc.key === generatedKey()" [routerLink]="['/portal/informe', doc.key]">
+        <strong class="key">{{ doc.key }}</strong>
+        <span class="title">{{ doc.title }}</span>
+        <span class="meta">
+          <span
+            class="badge"
+            [class.success]="doc.status === 'publicada'"
+            [class.warn]="doc.status === 'desactualizada'"
+            [class.info]="doc.status === 'revision'"
+            [class.draft]="doc.status === 'borrador'"
+          >{{ doc.statusLabel || 'En revisión' }}</span>
+          <span>{{ fmt(doc.updated) }}</span>
+        </span>
+      </a>
+    }
   } @empty {
     <div class="empty">{{ items().length ? 'Sin coincidencias.' : 'Aún no hay documentación generada.' }}</div>
   }

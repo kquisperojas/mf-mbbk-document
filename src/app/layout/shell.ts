@@ -19,27 +19,29 @@ export class ShellComponent implements OnInit {
   userMenuOpen = false;
   catalogOpen = true;
   toast = '';
-  docs = signal<DocIndexItem[]>([]);
+  private readonly allDocs = signal<DocIndexItem[]>([]);
+  readonly docs = computed(() => this.allDocs().filter((doc) => doc.status !== 'borrador' && doc.hasReport !== false));
   private readonly url = signal('');
   hideFooter = computed(() => /\/(generar|administrar|iniciativas|informe)\b/.test(this.url()));
   isInforme = computed(() => /\/informe\b/.test(this.url()));
 
   ngOnInit(): void {
-    const session = this.auth.session();
-    if (session) this.showToast(`Sesión iniciada como ${session.username}`);
+    const toast = this.auth.consumeLoginToast();
+    if (toast) this.showToast(toast);
     this.refreshDocs();
     this.url.set(this.router.url);
     this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
       this.url.set(e.urlAfterRedirects);
       this.sidebarOpen = false;
       this.userMenuOpen = false;
+      if (/\/iniciativas\b/.test(e.urlAfterRedirects)) this.refreshDocs();
     });
   }
 
   refreshDocs(): void {
     this.hub.docsIndex().subscribe({
-      next: (data) => this.docs.set(data.items || []),
-      error: () => this.docs.set([])
+      next: (data) => this.allDocs.set(data.items || []),
+      error: () => this.allDocs.set([])
     });
   }
 

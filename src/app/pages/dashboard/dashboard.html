@@ -1,24 +1,39 @@
 <h1>Dashboard</h1>
-<p class="lede muted">Nivel 0 del canal MBBK: encontrar iniciativas y microservicios, y ver su estado. Esta pantalla no explica ninguna iniciativa.</p>
-<div class="grid-4">
-  <div class="card stat"><strong>3</strong><span>Iniciativas en el hub</span></div>
-  <div class="card stat"><strong>1</strong><span>Ficha MS sembrada</span></div>
-  <div class="card stat"><strong>2</strong><span>Publicadas</span></div>
-  <div class="card stat"><strong>1</strong><span>Pruebas pendientes</span></div>
+<p class="lede muted">Nivel 0 del canal MBBK: encontrar iniciativas y ver su estado de documentación.</p>
+<div class="grid-5">
+  <button type="button" class="card stat" [class.active]="status() === 'all'" (click)="setStatus('all')">
+    <strong>{{ counts().total || '—' }}</strong><span>Iniciativas</span>
+  </button>
+  <button type="button" class="card stat" [class.active]="status() === 'borrador'" (click)="setStatus('borrador')">
+    <strong>{{ counts().borrador || '—' }}</strong><span>Borrador</span>
+  </button>
+  <button type="button" class="card stat" [class.active]="status() === 'revision'" (click)="setStatus('revision')">
+    <strong>{{ counts().revision || '—' }}</strong><span>En revisión</span>
+  </button>
+  <button type="button" class="card stat" [class.active]="status() === 'publicada'" (click)="setStatus('publicada')">
+    <strong>{{ counts().publicada || '—' }}</strong><span>Publicadas</span>
+  </button>
+  <button type="button" class="card stat" [class.active]="status() === 'desactualizada'" (click)="setStatus('desactualizada')">
+    <strong>{{ counts().desactualizada || '—' }}</strong><span>Desactualizadas</span>
+  </button>
 </div>
 
 <h2>Filtros</h2>
 <div class="filters" role="group" aria-label="Estado de documentación">
   @for (pill of [
     { id: 'all', label: 'Todos' },
-    { id: 'publicada', label: 'Publicada' },
-    { id: 'revision', label: 'En revisión' },
     { id: 'borrador', label: 'Borrador' },
+    { id: 'revision', label: 'En revisión' },
+    { id: 'publicada', label: 'Publicada' },
     { id: 'desactualizada', label: 'Desactualizada' }
   ]; track pill.id) {
     <button type="button" class="pill" [class.active]="status() === pill.id" (click)="setStatus(pill.id)">{{ pill.label }}</button>
   }
 </div>
+
+@if (error()) {
+  <div class="callout warn"><strong>No se pudo leer el índice:</strong> {{ error() }}</div>
+}
 
 <h2>Iniciativas</h2>
 <div class="table-wrap">
@@ -27,46 +42,35 @@
       <tr>
         <th>Código</th>
         <th>Nombre</th>
-        <th>MS impactados</th>
         <th>Estado</th>
-        <th>Versión</th>
+        <th>Pendiente</th>
         <th>Fecha</th>
-        <th>Owner</th>
       </tr>
     </thead>
     <tbody>
-      @for (row of filteredInitiatives(); track row.code) {
+      @for (row of filteredInitiatives(); track row.key) {
         <tr>
-          <td><a [routerLink]="row.route">{{ row.code }}</a></td>
-          <td>{{ row.name }}</td>
-          <td>{{ row.ms }}</td>
-          <td><span class="badge" [class.success]="row.status === 'publicada'" [class.warn]="row.status !== 'publicada'">{{ row.statusLabel }}</span></td>
-          <td>{{ row.version }}</td>
-          <td>{{ row.date }}</td>
-          <td>{{ row.owner }}</td>
+          <td>
+            <a [routerLink]="routeFor(row)" [queryParams]="queryFor(row)">{{ row.key }}</a>
+          </td>
+          <td>{{ row.title }}</td>
+          <td>
+            <span
+              class="badge"
+              [class.success]="statusOf(row) === 'publicada'"
+              [class.warn]="statusOf(row) === 'desactualizada'"
+              [class.info]="statusOf(row) === 'revision'"
+              [class.draft]="statusOf(row) === 'borrador'"
+            >{{ row.statusLabel || (statusOf(row) === 'borrador' ? 'Borrador' : row.status) }}</span>
+          </td>
+          <td>{{ missingLabel(row) }}</td>
+          <td>{{ fmt(row.updated) }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="5" class="no-data">No hay iniciativas en este estado.</td>
         </tr>
       }
     </tbody>
   </table>
-</div>
-
-<h2>Catálogo de microservicios</h2>
-<div class="grid-3">
-  @for (card of filteredCards(); track card.name) {
-    @if (card.route) {
-      <a class="card clickable" [routerLink]="card.route">
-        <span class="tag" [class.published]="card.tagClass === 'published'" [class.reuse]="card.tagClass === 'reuse'">{{ card.tag }}</span>
-        <h3>{{ card.name }}</h3>
-        <p>{{ card.blurb }}</p>
-        <p class="tertiary">{{ card.meta }}</p>
-      </a>
-    } @else {
-      <div class="card">
-        <span class="tag" [class.published]="card.tagClass === 'published'" [class.reuse]="card.tagClass === 'reuse'">{{ card.tag }}</span>
-        <h3>{{ card.name }}</h3>
-        <p>{{ card.blurb }}</p>
-        <p class="tertiary">{{ card.meta }}</p>
-      </div>
-    }
-  }
 </div>
